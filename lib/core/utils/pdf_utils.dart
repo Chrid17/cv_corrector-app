@@ -30,6 +30,27 @@ class PdfUtils {
     }
   }
 
+  /// Pick an image file (screenshot of job description).
+  static Future<({String path, String fileName})?> pickImage() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['png', 'jpg', 'jpeg', 'webp', 'bmp'],
+        dialogTitle: 'Select Job Description Screenshot',
+      );
+
+      if (result != null && result.files.single.path != null) {
+        return (
+          path: result.files.single.path!,
+          fileName: result.files.single.name,
+        );
+      }
+      return null;
+    } catch (e) {
+      throw Exception('Failed to pick image: $e');
+    }
+  }
+
   static Future<String> _extractTextFromPdf(File file) async {
     try {
       final PdfDocument document = PdfDocument(inputBytes: await file.readAsBytes());

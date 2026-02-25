@@ -46,13 +46,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             // API Key section
             InfoCard(
-              title: '🔑 Groq API Key (FREE)',
+              title: '🔑 API Key (FREE)',
               accentColor: AppColors.primary,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Enter your API key to enable CV analysis. Get a free key from Groq — no credit card needed!',
+                    'Enter your API key to enable CV analysis. Get a free key — no credit card needed!',
                     style: AppTextStyles.bodyMedium,
                   ),
                   const SizedBox(height: 16),
@@ -121,7 +121,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 children: [
                   _secItem('Your API key is stored only on your device.'),
-                  _secItem('CV text is sent directly to Groq Cloud API — never stored by us.'),
+                  _secItem('CV text is processed securely — never stored on any server.'),
                   _secItem('Analysis results are saved locally on your device only.'),
                   _secItem('We never collect personal data.'),
                 ],
@@ -131,13 +131,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             // App info
             InfoCard(
-              title: '📱 About CV Analyzer',
+              title: '📱 About CV Analyzer Pro',
               accentColor: AppColors.textSecondary,
               child: Column(
                 children: [
-                  _infoRow('Version', '1.0.0'),
-                  _infoRow('Engine', 'Llama 3.3 70B (Groq)'),
-                  _infoRow('Developer', 'Built with Flutter'),
+                  _infoRow('Version', '2.0.0'),
+                  _infoRow('Platform', 'Built with Flutter'),
                 ],
               ),
             ).animate().fadeIn(delay: 300.ms),
@@ -199,7 +198,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('How to get your Groq API Key (FREE)', style: AppTextStyles.headingMedium),
+            Text('How to get your API Key (FREE)', style: AppTextStyles.headingMedium),
             const SizedBox(height: 16),
             _step('1', 'Go to console.groq.com'),
             _step('2', 'Sign up with Google or GitHub (free)'),
@@ -218,7 +217,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   const Icon(Icons.warning_amber_outlined, color: AppColors.warning, size: 16),
                   const SizedBox(width: 8),
-                  Expanded(child: Text('Groq API is 100% free with generous rate limits. No credit card needed!', style: AppTextStyles.bodySmall.copyWith(color: AppColors.success))),
+                  Expanded(child: Text('The API is 100% free with generous rate limits. No credit card needed!', style: AppTextStyles.bodySmall.copyWith(color: AppColors.success))),
                 ],
               ),
             ),

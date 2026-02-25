@@ -46,6 +46,98 @@ class ProposedChange {
   });
 }
 
+class JobMatchAnalysis {
+  final int score;
+  final List<String> matchingRequirements;
+  final List<String> missingRequirements;
+  final List<String> tailoredSuggestions;
+  final int keywordAlignment;
+
+  const JobMatchAnalysis({
+    required this.score,
+    required this.matchingRequirements,
+    required this.missingRequirements,
+    required this.tailoredSuggestions,
+    required this.keywordAlignment,
+  });
+}
+
+class CompanyResearch {
+  final String companyName;
+  final String industry;
+  final String companyOverview;
+  final List<String> cultureInsights;
+  final List<String> values;
+  final List<String> interviewFocusAreas;
+  final List<String> talkingPoints;
+
+  const CompanyResearch({
+    required this.companyName,
+    required this.industry,
+    required this.companyOverview,
+    required this.cultureInsights,
+    required this.values,
+    required this.interviewFocusAreas,
+    required this.talkingPoints,
+  });
+}
+
+class CoverLetterReview {
+  final int score;
+  final String verdict;
+  final List<String> strengths;
+  final List<String> issues;
+  final String correctedVersion;
+  final List<String> suggestions;
+
+  const CoverLetterReview({
+    required this.score,
+    required this.verdict,
+    required this.strengths,
+    required this.issues,
+    required this.correctedVersion,
+    required this.suggestions,
+  });
+}
+
+class LearningPathItem {
+  final String skill;
+  final String priority;
+  final List<String> resources;
+  final String timeframe;
+
+  const LearningPathItem({
+    required this.skill,
+    required this.priority,
+    required this.resources,
+    required this.timeframe,
+  });
+}
+
+class SalaryNegotiation {
+  final String marketRange;
+  final List<String> negotiationTips;
+  final List<String> talkingPoints;
+
+  const SalaryNegotiation({
+    required this.marketRange,
+    required this.negotiationTips,
+    required this.talkingPoints,
+  });
+}
+
+class InterviewQA {
+  final String question;
+  final String sampleAnswer;
+  final String category;
+
+  const InterviewQA({
+    required this.question,
+    required this.sampleAnswer,
+    required this.category,
+  });
+}
+
 class CvAnalysis {
   final String id;
   final String candidateName;
@@ -74,6 +166,20 @@ class CvAnalysis {
   final String rawCvText;
   final List<ProposedChange> proposedChanges;
 
+  // New fields
+  final String correctedCvText;
+  final String? jobDescriptionText;
+  final String? rawCoverLetterText;
+  final JobMatchAnalysis? jobMatchAnalysis;
+  final CompanyResearch? companyResearch;
+  final CoverLetterReview? coverLetterReview;
+  final String tailoredCoverLetter;
+  final String followUpEmail;
+  final String networkingMessage;
+  final List<LearningPathItem> learningPath;
+  final SalaryNegotiation? salaryNegotiation;
+  final List<InterviewQA> interviewQA;
+
   const CvAnalysis({
     required this.id,
     required this.candidateName,
@@ -101,5 +207,22 @@ class CvAnalysis {
     required this.analyzedAt,
     required this.rawCvText,
     this.proposedChanges = const [],
+    this.correctedCvText = '',
+    this.jobDescriptionText,
+    this.rawCoverLetterText,
+    this.jobMatchAnalysis,
+    this.companyResearch,
+    this.coverLetterReview,
+    this.tailoredCoverLetter = '',
+    this.followUpEmail = '',
+    this.networkingMessage = '',
+    this.learningPath = const [],
+    this.salaryNegotiation,
+    this.interviewQA = const [],
   });
+
+  bool get hasJobDescription => jobDescriptionText != null && jobDescriptionText!.isNotEmpty;
+  bool get hasCoverLetterReview => coverLetterReview != null;
+  bool get hasJobMatch => jobMatchAnalysis != null;
+  bool get hasCompanyResearch => companyResearch != null;
 }

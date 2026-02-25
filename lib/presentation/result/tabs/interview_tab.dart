@@ -37,7 +37,7 @@ class InterviewTab extends StatelessWidget {
                       Text('Interview Prep', style: AppTextStyles.headingMedium),
                       const SizedBox(height: 4),
                       Text(
-                        'These questions are likely based on your CV and the role of ${result.jobTitle}.',
+                        'Questions likely based on your CV${result.hasJobDescription ? " and the job description" : ""} for ${result.jobTitle}.',
                         style: AppTextStyles.bodyMedium,
                       ),
                     ],
@@ -48,17 +48,54 @@ class InterviewTab extends StatelessWidget {
           ).animate().fadeIn(),
           const SizedBox(height: 20),
 
-          // Questions
-          ...result.interviewPrep.asMap().entries.map((e) => _QuestionCard(
-            number: e.key + 1,
-            question: e.value,
-          ).animate().fadeIn(delay: (e.key * 80).ms).slideY(begin: 0.05, end: 0)),
+          // Mock Interview Q&A Section
+          if (result.interviewQA.isNotEmpty) ...[
+            Row(
+              children: [
+                const Icon(Icons.record_voice_over_outlined, color: AppColors.primary, size: 20),
+                const SizedBox(width: 8),
+                Text('Mock Interview', style: AppTextStyles.headingSmall),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Practice these questions with sample answers crafted from YOUR experience.',
+              style: AppTextStyles.bodySmall,
+            ),
+            const SizedBox(height: 16),
+
+            ...result.interviewQA.asMap().entries.map((e) => _MockInterviewCard(
+              qa: e.value,
+              number: e.key + 1,
+            ).animate().fadeIn(delay: (e.key * 80).ms).slideY(begin: 0.05, end: 0)),
+
+            const SizedBox(height: 24),
+            const Divider(color: AppColors.border),
+            const SizedBox(height: 16),
+          ],
+
+          // Standard Questions
+          if (result.interviewPrep.isNotEmpty) ...[
+            Row(
+              children: [
+                const Icon(Icons.quiz_outlined, color: AppColors.accent, size: 20),
+                const SizedBox(width: 8),
+                Text('Additional Questions', style: AppTextStyles.headingSmall),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            ...result.interviewPrep.asMap().entries.map((e) => _QuestionCard(
+              number: e.key + 1,
+              question: e.value,
+            ).animate().fadeIn(delay: (e.key * 80).ms).slideY(begin: 0.05, end: 0)),
+          ],
 
           const SizedBox(height: 20),
 
           // STAR method
           InfoCard(
-            title: '⭐ The STAR Method',
+            title: 'The STAR Method',
             accentColor: AppColors.gold,
             child: Column(
               children: [
@@ -73,7 +110,7 @@ class InterviewTab extends StatelessWidget {
 
           // General tips
           InfoCard(
-            title: '💡 Interview Tips',
+            title: 'Interview Tips',
             accentColor: AppColors.primary,
             child: Column(
               children: [
@@ -128,6 +165,131 @@ class InterviewTab extends StatelessWidget {
   );
 }
 
+// Mock Interview Q&A Card with expandable answer
+class _MockInterviewCard extends StatefulWidget {
+  final InterviewQA qa;
+  final int number;
+  const _MockInterviewCard({required this.qa, required this.number});
+
+  @override
+  State<_MockInterviewCard> createState() => _MockInterviewCardState();
+}
+
+class _MockInterviewCardState extends State<_MockInterviewCard> {
+  bool _showAnswer = false;
+
+  Color get _categoryColor {
+    switch (widget.qa.category.toLowerCase()) {
+      case 'behavioral': return AppColors.accent;
+      case 'technical': return AppColors.primary;
+      case 'situational': return AppColors.warning;
+      default: return AppColors.success;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: _showAnswer ? _categoryColor.withOpacity(0.4) : AppColors.border,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 28, height: 28,
+                  decoration: BoxDecoration(
+                    color: _categoryColor.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Q${widget.number}',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: _categoryColor, fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(widget.qa.question, style: AppTextStyles.bodyLarge),
+                      const SizedBox(height: 6),
+                      TagChip(label: widget.qa.category, color: _categoryColor),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          InkWell(
+            onTap: () => setState(() => _showAnswer = !_showAnswer),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+              child: Row(
+                children: [
+                  const SizedBox(width: 40),
+                  Icon(
+                    _showAnswer ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    color: _categoryColor,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    _showAnswer ? 'Hide sample answer' : 'Show sample answer',
+                    style: AppTextStyles.bodySmall.copyWith(color: _categoryColor),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_showAnswer && widget.qa.sampleAnswer.isNotEmpty)
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: _categoryColor.withOpacity(0.07),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: _categoryColor.withOpacity(0.2)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.record_voice_over, color: _categoryColor, size: 14),
+                      const SizedBox(width: 6),
+                      Text('Sample Answer:', style: AppTextStyles.label.copyWith(color: _categoryColor)),
+                      const Spacer(),
+                      CopyButton(text: widget.qa.sampleAnswer),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(widget.qa.sampleAnswer, style: AppTextStyles.bodyMedium),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// Standard question card (same as before but simplified)
 class _QuestionCard extends StatefulWidget {
   final int number;
   final String question;
@@ -138,7 +300,7 @@ class _QuestionCard extends StatefulWidget {
 }
 
 class _QuestionCardState extends State<_QuestionCard> {
-  bool _showAnswer = false;
+  bool _showTip = false;
 
   @override
   Widget build(BuildContext context) {
@@ -147,7 +309,7 @@ class _QuestionCardState extends State<_QuestionCard> {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _showAnswer ? AppColors.accent.withOpacity(0.4) : AppColors.border),
+        border: Border.all(color: _showTip ? AppColors.accent.withOpacity(0.4) : AppColors.border),
       ),
       child: Column(
         children: [
@@ -170,28 +332,31 @@ class _QuestionCardState extends State<_QuestionCard> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: Text(widget.question, style: AppTextStyles.bodyLarge),
-                ),
+                Expanded(child: Text(widget.question, style: AppTextStyles.bodyLarge)),
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-            child: GestureDetector(
-              onTap: () => setState(() => _showAnswer = !_showAnswer),
+          InkWell(
+            onTap: () => setState(() => _showTip = !_showTip),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
               child: Row(
                 children: [
                   const SizedBox(width: 40),
                   Text(
-                    _showAnswer ? 'Hide tips ▲' : 'Show answer tips ▼',
+                    _showTip ? 'Hide tips' : 'Show tips',
                     style: AppTextStyles.bodySmall.copyWith(color: AppColors.accentLight),
+                  ),
+                  Icon(
+                    _showTip ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                    color: AppColors.accentLight,
+                    size: 16,
                   ),
                 ],
               ),
             ),
           ),
-          if (_showAnswer)
+          if (_showTip)
             Container(
               width: double.infinity,
               margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -201,16 +366,9 @@ class _QuestionCardState extends State<_QuestionCard> {
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: AppColors.accent.withOpacity(0.2)),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('💡 How to approach this:', style: AppTextStyles.bodySmall.copyWith(color: AppColors.accentLight)),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Use the STAR method. Prepare a specific example from your experience. Be concise (90 seconds max). Quantify your results whenever possible.',
-                    style: AppTextStyles.bodyMedium,
-                  ),
-                ],
+              child: Text(
+                'Use the STAR method. Prepare a specific example from your experience. Be concise (90 seconds max). Quantify your results whenever possible.',
+                style: AppTextStyles.bodyMedium,
               ),
             ),
         ],

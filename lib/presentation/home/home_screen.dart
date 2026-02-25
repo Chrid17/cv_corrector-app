@@ -1,9 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
-import '../../core/constants/app_strings.dart';
 import '../providers/cv_provider.dart';
 import '../../core/utils/pdf_utils.dart';
 import '../../core/widgets/common_widgets.dart';
@@ -48,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Text('CV', style: AppTextStyles.headingLarge.copyWith(color: AppColors.background, fontSize: 14)),
               ),
               const SizedBox(width: 6),
-              Text('Corrector', style: AppTextStyles.headingLarge.copyWith(color: AppColors.primary)),
+              Text('Analyzer Pro', style: AppTextStyles.headingLarge.copyWith(color: AppColors.primary)),
             ],
           ),
         ),
@@ -84,8 +84,36 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 // ─── Analyze Tab ──────────────────────────────────────────────────────────────
-class _AnalyzeTab extends StatelessWidget {
+class _AnalyzeTab extends StatefulWidget {
   const _AnalyzeTab();
+
+  @override
+  State<_AnalyzeTab> createState() => _AnalyzeTabState();
+}
+
+class _AnalyzeTabState extends State<_AnalyzeTab> {
+  bool _showJdSection = false;
+  bool _showCoverLetterSection = false;
+  late TextEditingController _cvController;
+  late TextEditingController _jdController;
+  late TextEditingController _clController;
+
+  @override
+  void initState() {
+    super.initState();
+    final provider = context.read<CvProvider>();
+    _cvController = TextEditingController(text: provider.cvText);
+    _jdController = TextEditingController(text: provider.jobDescriptionText);
+    _clController = TextEditingController(text: provider.coverLetterText);
+  }
+
+  @override
+  void dispose() {
+    _cvController.dispose();
+    _jdController.dispose();
+    _clController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,24 +127,43 @@ class _AnalyzeTab extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Hero header
               _buildHero(context),
               const SizedBox(height: 28),
-
-              // Feature chips
               _buildFeatureRow(),
               const SizedBox(height: 28),
 
-              // Upload area
+              // CV Upload
+              _buildSectionHeader('1. Your CV / Resume', Icons.description_outlined, true),
+              const SizedBox(height: 12),
               _buildUploadArea(context, provider),
-              const SizedBox(height: 16),
-
-              // OR divider + paste
+              const SizedBox(height: 12),
               const SectionDivider(label: 'OR PASTE YOUR CV TEXT'),
+              const SizedBox(height: 12),
+              _buildCvTextInput(provider),
+              const SizedBox(height: 24),
+
+              // Job Description Section (Collapsible)
+              _buildExpandableSection(
+                title: '2. Job Description (Optional)',
+                icon: Icons.work_outline_rounded,
+                subtitle: 'Add a JD for tailored analysis & company insights',
+                isExpanded: _showJdSection,
+                hasContent: provider.hasJobDescription || provider.hasJdImage,
+                onToggle: () => setState(() => _showJdSection = !_showJdSection),
+                child: _buildJdSection(context, provider),
+              ),
               const SizedBox(height: 16),
 
-              // Text input
-              _buildTextInput(context, provider),
+              // Cover Letter Section (Collapsible)
+              _buildExpandableSection(
+                title: '3. Cover Letter (Optional)',
+                icon: Icons.mail_outline_rounded,
+                subtitle: 'Upload your cover letter for review & correction',
+                isExpanded: _showCoverLetterSection,
+                hasContent: provider.hasCoverLetter,
+                onToggle: () => setState(() => _showCoverLetterSection = !_showCoverLetterSection),
+                child: _buildCoverLetterSection(context, provider),
+              ),
               const SizedBox(height: 24),
 
               // Error
@@ -125,11 +172,21 @@ class _AnalyzeTab extends StatelessWidget {
 
               // Analyze button
               GradientButton(
-                label: 'Analyze My CV',
+                label: provider.hasJobDescription
+                    ? 'Analyze & Match CV'
+                    : 'Analyze My CV',
                 icon: Icons.search_rounded,
                 onTap: provider.cvText.isNotEmpty ? () => _analyze(context, provider) : null,
                 width: double.infinity,
               ),
+              const SizedBox(height: 8),
+              if (provider.hasJobDescription || provider.hasCoverLetter)
+                Center(
+                  child: Text(
+                    '${provider.hasJobDescription ? "JD matching" : ""}${provider.hasJobDescription && provider.hasCoverLetter ? " + " : ""}${provider.hasCoverLetter ? "Cover letter review" : ""} enabled',
+                    style: AppTextStyles.bodySmall.copyWith(color: AppColors.success),
+                  ),
+                ),
               const SizedBox(height: 40),
             ],
           ),
@@ -138,18 +195,272 @@ class _AnalyzeTab extends StatelessWidget {
     );
   }
 
+  Widget _buildSectionHeader(String title, IconData icon, bool alwaysVisible) {
+    return Row(
+      children: [
+        Icon(icon, color: AppColors.primary, size: 20),
+        const SizedBox(width: 8),
+        Text(title, style: AppTextStyles.headingSmall),
+      ],
+    ).animate().fadeIn();
+  }
+
+  Widget _buildExpandableSection({
+    required String title,
+    required IconData icon,
+    required String subtitle,
+    required bool isExpanded,
+    required bool hasContent,
+    required VoidCallback onToggle,
+    required Widget child,
+  }) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: hasContent ? AppColors.primary.withOpacity(0.5) : AppColors.border,
+        ),
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: onToggle,
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: hasContent
+                          ? AppColors.primary.withOpacity(0.15)
+                          : AppColors.surfaceLight,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      hasContent ? Icons.check_circle_rounded : icon,
+                      color: hasContent ? AppColors.primary : AppColors.textSecondary,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(title, style: AppTextStyles.label),
+                        const SizedBox(height: 2),
+                        Text(subtitle, style: AppTextStyles.bodySmall.copyWith(fontSize: 11)),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                    color: AppColors.textSecondary,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (isExpanded)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: child,
+            ),
+        ],
+      ),
+    ).animate().fadeIn();
+  }
+
+  Widget _buildJdSection(BuildContext context, CvProvider provider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Divider(color: AppColors.border),
+        const SizedBox(height: 12),
+
+        // Image upload for JD
+        Row(
+          children: [
+            Expanded(
+              child: GestureDetector(
+                onTap: () => _pickJdImage(context, provider),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 14),
+                  decoration: BoxDecoration(
+                    color: provider.hasJdImage
+                        ? AppColors.primary.withOpacity(0.05)
+                        : AppColors.background,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: provider.hasJdImage
+                          ? AppColors.primary.withOpacity(0.5)
+                          : AppColors.border,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        provider.hasJdImage ? Icons.check_circle : Icons.image_outlined,
+                        color: provider.hasJdImage ? AppColors.primary : AppColors.textSecondary,
+                        size: 28,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        provider.hasJdImage ? provider.jdImageName : 'Upload Screenshot',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: provider.hasJdImage ? AppColors.primary : AppColors.textSecondary,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            if (provider.hasJdImage && !provider.hasJobDescription) ...[
+              const SizedBox(width: 12),
+              SizedBox(
+                height: 80,
+                child: provider.isExtractingImage
+                    ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
+                    : GradientButton(
+                        label: 'Extract Text',
+                        icon: Icons.text_snippet_outlined,
+                        onTap: () => _extractJdText(context, provider),
+                      ),
+              ),
+            ],
+          ],
+        ),
+
+        if (provider.hasJdImage) ...[
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.file(
+              File(provider.jdImagePath),
+              height: 120,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ],
+
+        const SizedBox(height: 12),
+        const SectionDivider(label: 'OR PASTE JOB DESCRIPTION'),
+        const SizedBox(height: 12),
+
+        TextField(
+          maxLines: 6,
+          controller: _jdController,
+          style: AppTextStyles.bodyLarge.copyWith(fontSize: 12),
+          decoration: InputDecoration(
+            hintText: 'Paste the job description here...\n\nThis enables:\n• JD-CV matching score\n• Company insights\n• Tailored cover letter',
+            hintStyle: AppTextStyles.bodyMedium.copyWith(fontSize: 12),
+            suffixIcon: provider.hasJobDescription
+                ? IconButton(
+                    icon: const Icon(Icons.clear, color: AppColors.textSecondary, size: 18),
+                    onPressed: () {
+                      _jdController.clear();
+                      provider.clearJobDescription();
+                    },
+                  )
+                : null,
+          ),
+          onChanged: (v) => provider.setJobDescription(v),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCoverLetterSection(BuildContext context, CvProvider provider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Divider(color: AppColors.border),
+        const SizedBox(height: 12),
+
+        // File upload for cover letter
+        GestureDetector(
+          onTap: () => _pickCoverLetter(context, provider),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+            decoration: BoxDecoration(
+              color: provider.hasCoverLetter && provider.coverLetterFileName.isNotEmpty
+                  ? AppColors.primary.withOpacity(0.05)
+                  : AppColors.background,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: provider.hasCoverLetter
+                    ? AppColors.primary.withOpacity(0.5)
+                    : AppColors.border,
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  provider.hasCoverLetter ? Icons.check_circle : Icons.upload_file_rounded,
+                  color: provider.hasCoverLetter ? AppColors.primary : AppColors.textSecondary,
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  provider.coverLetterFileName.isNotEmpty
+                      ? provider.coverLetterFileName
+                      : 'Upload Cover Letter (PDF/TXT)',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: provider.hasCoverLetter ? AppColors.primary : AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        const SectionDivider(label: 'OR PASTE COVER LETTER'),
+        const SizedBox(height: 12),
+        TextField(
+          maxLines: 6,
+          controller: _clController,
+          style: AppTextStyles.bodyLarge.copyWith(fontSize: 12),
+          decoration: InputDecoration(
+            hintText: 'Paste your cover letter here for review...\n\nYou\'ll receive:\n• Score & corrections\n• Improved version\n• Specific suggestions',
+            hintStyle: AppTextStyles.bodyMedium.copyWith(fontSize: 12),
+            suffixIcon: provider.hasCoverLetter
+                ? IconButton(
+                    icon: const Icon(Icons.clear, color: AppColors.textSecondary, size: 18),
+                    onPressed: () {
+                      _clController.clear();
+                      provider.clearCoverLetter();
+                    },
+                  )
+                : null,
+          ),
+          onChanged: (v) => provider.setCoverLetterText(v),
+        ),
+      ],
+    );
+  }
+
   Widget _buildHero(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Professional', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primary))
+        Text('CV Analyzer Pro', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primary))
             .animate().fadeIn(duration: 400.ms),
         const SizedBox(height: 4),
-        Text('CV Analyzer\n& Corrector', style: AppTextStyles.headingLarge.copyWith(fontSize: 40))
+        Text('Analyze. Improve.\nGet Hired.', style: AppTextStyles.headingLarge.copyWith(fontSize: 36))
             .animate().fadeIn(delay: 100.ms, duration: 400.ms),
         const SizedBox(height: 10),
         Text(
-          'Upload your CV and get instant professional corrections, ATS scores, keyword analysis, a cover letter, and interview prep.',
+          'Upload your CV, job description & cover letter — get ATS scores, tailored corrections, company intel, interview prep, and more.',
           style: AppTextStyles.bodyMedium,
         ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
       ],
@@ -158,11 +469,12 @@ class _AnalyzeTab extends StatelessWidget {
 
   Widget _buildFeatureRow() {
     final features = [
-      (Icons.spellcheck_rounded, 'Grammar Fix'),
       (Icons.speed_rounded, 'ATS Score'),
-      (Icons.key_rounded, 'Keywords'),
+      (Icons.compare_arrows_rounded, 'JD Match'),
+      (Icons.business_outlined, 'Company Intel'),
       (Icons.mail_outline_rounded, 'Cover Letter'),
-      (Icons.psychology_outlined, 'Interview Prep'),
+      (Icons.psychology_outlined, 'Mock Interview'),
+      (Icons.school_outlined, 'Learning Path'),
     ];
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -182,7 +494,7 @@ class _AnalyzeTab extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
+        padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 24),
         decoration: BoxDecoration(
           color: provider.hasCvText && provider.fileName.isNotEmpty
               ? AppColors.primary.withOpacity(0.05)
@@ -198,7 +510,7 @@ class _AnalyzeTab extends StatelessWidget {
         child: Column(
           children: [
             Container(
-              padding: const EdgeInsets.all(18),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: provider.hasCvText && provider.fileName.isNotEmpty
                     ? AppColors.primaryGradient
@@ -215,17 +527,18 @@ class _AnalyzeTab extends StatelessWidget {
                 color: provider.cvText.isNotEmpty
                     ? AppColors.background
                     : AppColors.textSecondary,
-                size: 32,
+                size: 28,
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
             Text(
-              'Upload PDF or TXT',
-              style: AppTextStyles.headingMedium.copyWith(
+              provider.fileName.isNotEmpty ? provider.fileName : 'Upload PDF or TXT',
+              style: AppTextStyles.headingSmall.copyWith(
                 color: provider.cvText.isNotEmpty ? AppColors.primary : AppColors.textPrimary,
+                fontSize: 16,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Text(
               provider.fileName.isNotEmpty
                   ? 'Tap to change file'
@@ -238,22 +551,25 @@ class _AnalyzeTab extends StatelessWidget {
     ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.05, end: 0);
   }
 
-  Widget _buildTextInput(BuildContext context, CvProvider provider) {
+  Widget _buildCvTextInput(CvProvider provider) {
     return TextField(
-      maxLines: 8,
-      style: AppTextStyles.bodyLarge.copyWith(fontSize: 13),
+      maxLines: 6,
+      controller: _cvController,
+      style: AppTextStyles.bodyLarge.copyWith(fontSize: 12),
       decoration: InputDecoration(
         hintText: 'Paste your CV text here...\n\nExample:\nJohn Doe\nSoftware Engineer\n...',
-        hintStyle: AppTextStyles.bodyMedium.copyWith(fontSize: 13),
+        hintStyle: AppTextStyles.bodyMedium.copyWith(fontSize: 12),
         suffixIcon: provider.hasCvText
             ? IconButton(
                 icon: const Icon(Icons.clear, color: AppColors.textSecondary, size: 18),
-                onPressed: () => provider.clearCvText(),
+                onPressed: () {
+                  _cvController.clear();
+                  provider.clearCvText();
+                },
               )
             : null,
       ),
       onChanged: (v) => provider.setCvText(v),
-      controller: TextEditingController(text: provider.cvText),
     );
   }
 
@@ -281,6 +597,61 @@ class _AnalyzeTab extends StatelessWidget {
       final res = await PdfUtils.pickAndExtractText();
       if (res != null) {
         provider.setCvText(res.text, fileName: res.fileName);
+        _cvController.text = res.text;
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickJdImage(BuildContext context, CvProvider provider) async {
+    try {
+      final res = await PdfUtils.pickImage();
+      if (res != null) {
+        provider.setJdImage(res.path, res.fileName);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error),
+        );
+      }
+    }
+  }
+
+  Future<void> _extractJdText(BuildContext context, CvProvider provider) async {
+    try {
+      await provider.extractTextFromJdImage();
+      if (provider.hasJobDescription) {
+        _jdController.text = provider.jobDescriptionText;
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Text extracted from image successfully!'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickCoverLetter(BuildContext context, CvProvider provider) async {
+    try {
+      final res = await PdfUtils.pickAndExtractText();
+      if (res != null) {
+        provider.setCoverLetterText(res.text, fileName: res.fileName);
+        _clController.text = res.text;
       }
     } catch (e) {
       if (context.mounted) {
@@ -325,7 +696,7 @@ class _LoadingView extends StatelessWidget {
               child: const Icon(Icons.document_scanner_rounded, color: Colors.white, size: 42),
             ).animate(onPlay: (c) => c.repeat()).shimmer(duration: 1500.ms, color: Colors.white.withOpacity(0.2)),
             const SizedBox(height: 36),
-            Text('Analyzing your CV', style: AppTextStyles.headingLarge),
+            Text('Analyzing your documents', style: AppTextStyles.headingMedium),
             const SizedBox(height: 12),
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 400),
@@ -343,7 +714,7 @@ class _LoadingView extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
             ).animate(onPlay: (c) => c.repeat()).shimmer(duration: 1200.ms),
             const SizedBox(height: 16),
-            Text('This may take 20–40 seconds', style: AppTextStyles.bodySmall),
+            Text('This may take 30–60 seconds', style: AppTextStyles.bodySmall),
           ],
         ),
       ),

@@ -24,13 +24,11 @@ import 'presentation/home/home_screen.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Set preferred orientation
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
 
-  // Configure system UI
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
@@ -53,6 +51,7 @@ void main() {
         ChangeNotifierProvider(
           create: (_) => CvProvider(
             analyzeCvUseCase: AnalyzeCvUseCase(cvRepository),
+            extractImageTextUseCase: ExtractImageTextUseCase(cvRepository),
             getHistoryUseCase: GetHistoryUseCase(cvRepository),
             deleteHistoryUseCase: DeleteHistoryUseCase(cvRepository),
             clearHistoryUseCase: ClearHistoryUseCase(cvRepository),

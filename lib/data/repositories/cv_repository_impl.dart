@@ -15,9 +15,24 @@ class CvRepositoryImpl implements CvRepository {
         _localDataSource = localDataSource;
 
   @override
-  Future<CvAnalysis> analyzeCv(String cvText, String apiKey) async {
-    final model = await _remoteDataSource.analyzeCv(cvText, apiKey);
+  Future<CvAnalysis> analyzeCv(
+    String cvText,
+    String apiKey, {
+    String? jobDescription,
+    String? coverLetterText,
+  }) async {
+    final model = await _remoteDataSource.analyzeCv(
+      cvText,
+      apiKey,
+      jobDescription: jobDescription,
+      coverLetterText: coverLetterText,
+    );
     return model.toEntity();
+  }
+
+  @override
+  Future<String> extractTextFromImage(String imagePath, String apiKey) async {
+    return await _remoteDataSource.extractTextFromImage(imagePath, apiKey);
   }
 
   @override
