@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:share_plus/share_plus.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/widgets/common_widgets.dart';
@@ -28,7 +28,7 @@ class FollowUpTab extends StatelessWidget {
                   CopyButton(text: result.followUpEmail),
                   const SizedBox(width: 8),
                   GestureDetector(
-                    onTap: () => Share.share(result.followUpEmail),
+                    onTap: () => Clipboard.setData(ClipboardData(text: result.followUpEmail)),
                     child: const Icon(Icons.share_outlined, color: AppColors.textSecondary, size: 18),
                   ),
                 ],
@@ -74,7 +74,7 @@ class FollowUpTab extends StatelessWidget {
                   CopyButton(text: result.networkingMessage),
                   const SizedBox(width: 8),
                   GestureDetector(
-                    onTap: () => Share.share(result.networkingMessage),
+                    onTap: () => Clipboard.setData(ClipboardData(text: result.networkingMessage)),
                     child: const Icon(Icons.share_outlined, color: AppColors.textSecondary, size: 18),
                   ),
                 ],
@@ -126,7 +126,7 @@ class FollowUpTab extends StatelessWidget {
                   CopyButton(text: result.tailoredCoverLetter),
                   const SizedBox(width: 8),
                   GestureDetector(
-                    onTap: () => Share.share(result.tailoredCoverLetter),
+                    onTap: () => Clipboard.setData(ClipboardData(text: result.tailoredCoverLetter)),
                     child: const Icon(Icons.share_outlined, color: AppColors.textSecondary, size: 18),
                   ),
                 ],

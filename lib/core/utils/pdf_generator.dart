@@ -1,11 +1,10 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui' show Offset, Rect;
-import 'package:file_picker/file_picker.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
-import 'package:path_provider/path_provider.dart';
+import 'platform_save.dart' as platform;
 
 class PdfGenerator {
-  static Future<File> generateCoverLetterPdf({
+  static Future<Uint8List> generateCoverLetterPdfBytes({
     required String coverLetterText,
     required String candidateName,
   }) async {
@@ -66,17 +65,12 @@ class PdfGenerator {
       bounds: Rect.fromLTWH(40, pageSize.height - 30, pageSize.width - 80, 20),
     );
 
-    final dir = await getTemporaryDirectory();
-    final safeName = candidateName.replaceAll(RegExp(r'[^\w\s]'), '').replaceAll(' ', '_');
-    final path = '${dir.path}/${safeName}_Cover_Letter.pdf';
-    final file = File(path);
-    await file.writeAsBytes(await document.save());
+    final bytes = Uint8List.fromList(await document.save());
     document.dispose();
-
-    return file;
+    return bytes;
   }
 
-  static Future<File> generateCorrectedCvPdf({
+  static Future<Uint8List> generateCorrectedCvPdfBytes({
     required String correctedCvText,
     required String candidateName,
   }) async {
@@ -164,35 +158,16 @@ class PdfGenerator {
       bounds: Rect.fromLTWH(40, pageSize.height - 30, pageSize.width - 80, 20),
     );
 
-    final dir = await getTemporaryDirectory();
-    final safeName = candidateName.replaceAll(RegExp(r'[^\w\s]'), '').replaceAll(' ', '_');
-    final path = '${dir.path}/${safeName}_Corrected_CV.pdf';
-    final file = File(path);
-    await file.writeAsBytes(await document.save());
+    final bytes = Uint8List.fromList(await document.save());
     document.dispose();
-
-    return file;
+    return bytes;
   }
 
-  /// Saves a generated PDF using a native file-save dialog.
-  /// Returns the saved path, or null if user cancelled.
-  static Future<String?> savePdfWithDialog(File tempFile, String defaultFileName) async {
-    final result = await FilePicker.platform.saveFile(
-      dialogTitle: 'Save PDF',
-      fileName: defaultFileName,
-      type: FileType.custom,
-      allowedExtensions: ['pdf'],
-    );
-
-    if (result == null) return null;
-
-    final savePath = result.endsWith('.pdf') ? result : '$result.pdf';
-    await tempFile.copy(savePath);
-    return savePath;
+  static Future<String?> savePdf(Uint8List bytes, String fileName) async {
+    return await platform.platformSavePdf(bytes, fileName);
   }
 
-  /// Opens the folder containing the saved file (Windows).
   static Future<void> openFileLocation(String filePath) async {
-    await Process.run('explorer', ['/select,', filePath]);
+    await platform.platformOpenFileLocation(filePath);
   }
 }

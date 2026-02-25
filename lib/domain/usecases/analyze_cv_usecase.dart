@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import '../entities/cv_analysis.dart';
 import '../repositories/cv_repository.dart';
 
@@ -6,7 +7,6 @@ class AnalyzeCvUseCase {
 
   AnalyzeCvUseCase(this._repository);
 
-  /// Validates input, calls analysis, saves result, and returns it.
   Future<CvAnalysis> call(
     String cvText,
     String apiKey, {
@@ -36,10 +36,10 @@ class ExtractImageTextUseCase {
 
   ExtractImageTextUseCase(this._repository);
 
-  Future<String> call(String imagePath, String apiKey) async {
+  Future<String> call(Uint8List imageBytes, String mimeType, String apiKey) async {
     if (apiKey.isEmpty) {
       throw Exception('Please add your API key in Settings.');
     }
-    return await _repository.extractTextFromImage(imagePath, apiKey);
+    return await _repository.extractTextFromImage(imageBytes, mimeType, apiKey);
   }
 }

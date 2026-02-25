@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import '../entities/cv_analysis.dart';
 
 /// Abstract contract for CV operations.
@@ -9,7 +10,7 @@ abstract class CvRepository {
     String? jobDescription,
     String? coverLetterText,
   });
-  Future<String> extractTextFromImage(String imagePath, String apiKey);
+  Future<String> extractTextFromImage(Uint8List imageBytes, String mimeType, String apiKey);
   Future<List<CvAnalysis>> getHistory();
   Future<void> saveResult(CvAnalysis result);
   Future<void> deleteResult(String id);

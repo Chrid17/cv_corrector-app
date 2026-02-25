@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
@@ -343,8 +342,8 @@ class _AnalyzeTabState extends State<_AnalyzeTab> {
           const SizedBox(height: 8),
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: Image.file(
-              File(provider.jdImagePath),
+            child: Image.memory(
+              provider.jdImageBytes!,
               height: 120,
               width: double.infinity,
               fit: BoxFit.cover,
@@ -612,7 +611,15 @@ class _AnalyzeTabState extends State<_AnalyzeTab> {
     try {
       final res = await PdfUtils.pickImage();
       if (res != null) {
-        provider.setJdImage(res.path, res.fileName);
+        final mimeTypes = {
+          'png': 'image/png',
+          'jpg': 'image/jpeg',
+          'jpeg': 'image/jpeg',
+          'webp': 'image/webp',
+          'bmp': 'image/bmp',
+        };
+        final mimeType = mimeTypes[res.extension] ?? 'image/jpeg';
+        provider.setJdImage(res.bytes, res.fileName, mimeType);
       }
     } catch (e) {
       if (context.mounted) {

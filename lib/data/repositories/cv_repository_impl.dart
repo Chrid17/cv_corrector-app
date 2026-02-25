@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import '../../domain/entities/cv_analysis.dart';
 import '../../domain/repositories/cv_repository.dart';
 import '../datasources/cv_remote_datasource.dart';
@@ -31,8 +32,8 @@ class CvRepositoryImpl implements CvRepository {
   }
 
   @override
-  Future<String> extractTextFromImage(String imagePath, String apiKey) async {
-    return await _remoteDataSource.extractTextFromImage(imagePath, apiKey);
+  Future<String> extractTextFromImage(Uint8List imageBytes, String mimeType, String apiKey) async {
+    return await _remoteDataSource.extractTextFromImage(imageBytes, mimeType, apiKey);
   }
 
   @override

@@ -404,7 +404,7 @@ class _CoverLetterTabState extends State<CoverLetterTab> {
     });
 
     try {
-      final file = await PdfGenerator.generateCoverLetterPdf(
+      final bytes = await PdfGenerator.generateCoverLetterPdfBytes(
         coverLetterText: content,
         candidateName: name,
       );
@@ -415,17 +415,12 @@ class _CoverLetterTabState extends State<CoverLetterTab> {
               ? '${safeName}_Corrected_Cover_Letter.pdf'
               : '${safeName}_Cover_Letter.pdf';
 
-      final savedPath = await PdfGenerator.savePdfWithDialog(file, fileName);
+      final savedPath = await PdfGenerator.savePdf(bytes, fileName);
       if (mounted && savedPath != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Saved to: $savedPath'),
+            content: Text('Saved: $savedPath'),
             backgroundColor: AppColors.success,
-            action: SnackBarAction(
-              label: 'Open Folder',
-              textColor: Colors.white,
-              onPressed: () => PdfGenerator.openFileLocation(savedPath),
-            ),
           ),
         );
       }

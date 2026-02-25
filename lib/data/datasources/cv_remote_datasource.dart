@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import '../../core/constants/app_strings.dart';
 import '../models/cv_analysis_model.dart';
@@ -7,20 +7,8 @@ import '../models/cv_analysis_model.dart';
 /// Handles the remote API calls to Groq.
 class CvRemoteDataSource {
   /// Extract text from a job description image using Groq vision model.
-  Future<String> extractTextFromImage(String imagePath, String apiKey) async {
-    final file = File(imagePath);
-    final bytes = await file.readAsBytes();
-    final base64Image = base64Encode(bytes);
-
-    final ext = imagePath.split('.').last.toLowerCase();
-    final mimeTypes = {
-      'png': 'image/png',
-      'jpg': 'image/jpeg',
-      'jpeg': 'image/jpeg',
-      'webp': 'image/webp',
-      'bmp': 'image/bmp',
-    };
-    final mimeType = mimeTypes[ext] ?? 'image/jpeg';
+  Future<String> extractTextFromImage(Uint8List imageBytes, String mimeType, String apiKey) async {
+    final base64Image = base64Encode(imageBytes);
 
     final response = await http.post(
       Uri.parse(AppStrings.groqUrl),
@@ -178,7 +166,6 @@ class CvRemoteDataSource {
       rawCoverLetterText: coverLetterText,
     );
 
-    // Fallback: if model returned a placeholder instead of actual corrected CV
     if (_isPlaceholderText(model.correctedCvText)) {
       final builtCv = _buildCorrectedCvFromCorrections(cvText, model.corrections, model.proposedChanges);
       return CvAnalysisModel(
@@ -265,10 +252,6 @@ class CvRemoteDataSource {
     return result;
   }
 
-  /// Replaces all occurrences of [from] with [to] in [source].
-  /// Unlike replaceFirst, this ensures every instance is corrected.
-  /// Unlike replaceAll on the full string, this rebuilds incrementally
-  /// so that replacement text isn't accidentally matched again.
   String _replaceNextOccurrence(String source, String from, String to) {
     final buffer = StringBuffer();
     var searchStart = 0;

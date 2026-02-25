@@ -274,22 +274,17 @@ class _OverviewTabState extends State<OverviewTab> {
   Future<void> _downloadCorrectedCv(CvAnalysis result) async {
     setState(() => _downloadingCV = true);
     try {
-      final file = await PdfGenerator.generateCorrectedCvPdf(
+      final bytes = await PdfGenerator.generateCorrectedCvPdfBytes(
         correctedCvText: result.correctedCvText,
         candidateName: result.candidateName,
       );
       final safeName = result.candidateName.replaceAll(RegExp(r'[^\w\s]'), '').replaceAll(' ', '_');
-      final savedPath = await PdfGenerator.savePdfWithDialog(file, '${safeName}_Corrected_CV.pdf');
+      final savedPath = await PdfGenerator.savePdf(bytes, '${safeName}_Corrected_CV.pdf');
       if (mounted && savedPath != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Saved to: $savedPath'),
+            content: Text('Saved: $savedPath'),
             backgroundColor: AppColors.success,
-            action: SnackBarAction(
-              label: 'Open Folder',
-              textColor: Colors.white,
-              onPressed: () => PdfGenerator.openFileLocation(savedPath),
-            ),
           ),
         );
       }

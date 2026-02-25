@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../../domain/entities/cv_analysis.dart';
 import '../../domain/usecases/analyze_cv_usecase.dart';
@@ -43,7 +44,8 @@ class CvProvider with ChangeNotifier {
 
   // New input state
   String _jobDescriptionText = '';
-  String _jdImagePath = '';
+  Uint8List? _jdImageBytes;
+  String _jdImageMimeType = '';
   String _jdImageName = '';
   String _coverLetterText = '';
   String _coverLetterFileName = '';
@@ -61,13 +63,13 @@ class CvProvider with ChangeNotifier {
   String get fileName => _fileName;
 
   String get jobDescriptionText => _jobDescriptionText;
-  String get jdImagePath => _jdImagePath;
+  Uint8List? get jdImageBytes => _jdImageBytes;
   String get jdImageName => _jdImageName;
   String get coverLetterText => _coverLetterText;
   String get coverLetterFileName => _coverLetterFileName;
   bool get hasJobDescription => _jobDescriptionText.isNotEmpty;
   bool get hasCoverLetter => _coverLetterText.isNotEmpty;
-  bool get hasJdImage => _jdImagePath.isNotEmpty;
+  bool get hasJdImage => _jdImageBytes != null;
   bool get isExtractingImage => _isExtractingImage;
 
   // --- Setters ---
@@ -90,14 +92,16 @@ class CvProvider with ChangeNotifier {
 
   void clearJobDescription() {
     _jobDescriptionText = '';
-    _jdImagePath = '';
+    _jdImageBytes = null;
+    _jdImageMimeType = '';
     _jdImageName = '';
     notifyListeners();
   }
 
-  void setJdImage(String path, String name) {
-    _jdImagePath = path;
+  void setJdImage(Uint8List bytes, String name, String mimeType) {
+    _jdImageBytes = bytes;
     _jdImageName = name;
+    _jdImageMimeType = mimeType;
     notifyListeners();
   }
 
@@ -135,13 +139,13 @@ class CvProvider with ChangeNotifier {
 
   /// Extract text from a JD screenshot.
   Future<void> extractTextFromJdImage() async {
-    if (_jdImagePath.isEmpty || _apiKey.isEmpty) return;
+    if (_jdImageBytes == null || _apiKey.isEmpty) return;
 
     _isExtractingImage = true;
     notifyListeners();
 
     try {
-      final extractedText = await _extractImageTextUseCase(_jdImagePath, _apiKey);
+      final extractedText = await _extractImageTextUseCase(_jdImageBytes!, _jdImageMimeType, _apiKey);
       _jobDescriptionText = extractedText;
       _isExtractingImage = false;
       notifyListeners();
