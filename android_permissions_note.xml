@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Add INTERNET and storage permissions for API calls and file access -->
+<!-- Place this in android/app/src/main/AndroidManifest.xml -->
+<!--
+    Required additions inside <manifest> tag:
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+-->
