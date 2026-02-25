@@ -1,12 +1,12 @@
 {
-    "name": "cv_corrector",
-    "short_name": "cv_corrector",
+    "name": "CV Analyzer Pro",
+    "short_name": "CV Analyzer",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#0F172A",
+    "theme_color": "#0F172A",
+    "description": "Analyze, improve, and get hired. Upload your CV for ATS scoring, tailored corrections, cover letters, and interview prep.",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {
