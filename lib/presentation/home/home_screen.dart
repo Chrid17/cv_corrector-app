@@ -454,16 +454,13 @@ class _AnalyzeTabState extends State<_AnalyzeTab> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('CV Analyzer Pro', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primary))
-            .animate().fadeIn(duration: 400.ms),
-        const SizedBox(height: 4),
         Text('Analyze. Improve.\nGet Hired.', style: AppTextStyles.headingLarge.copyWith(fontSize: 36))
-            .animate().fadeIn(delay: 100.ms, duration: 400.ms),
+            .animate().fadeIn(duration: 400.ms),
         const SizedBox(height: 10),
         Text(
           'Upload your CV, job description & cover letter — get ATS scores, tailored corrections, company intel, interview prep, and more.',
           style: AppTextStyles.bodyMedium,
-        ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
+        ).animate().fadeIn(delay: 100.ms, duration: 400.ms),
       ],
     );
   }

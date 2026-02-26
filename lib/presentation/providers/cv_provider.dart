@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import '../../core/constants/app_strings.dart';
 import '../../domain/entities/cv_analysis.dart';
 import '../../domain/usecases/analyze_cv_usecase.dart';
 import '../../domain/usecases/history_usecases.dart';
@@ -126,7 +127,8 @@ class CvProvider with ChangeNotifier {
 
   // --- Actions ---
   Future<void> init() async {
-    _apiKey = await _getApiKeyUseCase() ?? '';
+    final saved = await _getApiKeyUseCase() ?? '';
+    _apiKey = saved.isNotEmpty ? saved : AppStrings.defaultApiKey;
     _history = await _getHistoryUseCase();
     notifyListeners();
   }

@@ -51,7 +51,7 @@ void main() {
   final settingsRepository = SettingsRepositoryImpl();
 
   runApp(
-    MultiProvider(
+          MultiProvider(
       providers: [
         ChangeNotifierProvider(
           create: (_) => CvProvider(
