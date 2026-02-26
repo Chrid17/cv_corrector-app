@@ -594,7 +594,7 @@ class _AnalyzeTabState extends State<_AnalyzeTab> {
     try {
       final res = await PdfUtils.pickAndExtractText();
       if (res != null) {
-        provider.setCvText(res.text, fileName: res.fileName);
+        provider.setCvText(res.text, fileName: res.fileName, pdfBytes: res.pdfBytes);
         _cvController.text = res.text;
       }
     } catch (e) {

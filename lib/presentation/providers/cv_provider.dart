@@ -51,6 +51,7 @@ class CvProvider with ChangeNotifier {
   String _coverLetterText = '';
   String _coverLetterFileName = '';
   bool _isExtractingImage = false;
+  Uint8List? _originalCvPdfBytes;
 
   // --- Getters ---
   String get apiKey => _apiKey;
@@ -72,17 +73,20 @@ class CvProvider with ChangeNotifier {
   bool get hasCoverLetter => _coverLetterText.isNotEmpty;
   bool get hasJdImage => _jdImageBytes != null;
   bool get isExtractingImage => _isExtractingImage;
+  Uint8List? get originalCvPdfBytes => _originalCvPdfBytes;
 
   // --- Setters ---
-  void setCvText(String text, {String? fileName}) {
+  void setCvText(String text, {String? fileName, Uint8List? pdfBytes}) {
     _cvText = text;
     if (fileName != null) _fileName = fileName;
+    if (pdfBytes != null) _originalCvPdfBytes = pdfBytes;
     notifyListeners();
   }
 
   void clearCvText() {
     _cvText = '';
     _fileName = '';
+    _originalCvPdfBytes = null;
     notifyListeners();
   }
 

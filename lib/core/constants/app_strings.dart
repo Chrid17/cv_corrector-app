@@ -54,8 +54,12 @@ SKILLS ANALYSIS RULES:
 
 CORRECTED CV RULES (CRITICAL — MUST FOLLOW):
 - You MUST produce a COMPLETE, FULL corrected version of the entire CV with ALL corrections and proposed changes applied
-- Maintain the original CV structure and sections but with improved content
-- Apply every grammar fix, impact improvement, quantification, and formatting enhancement
+- PRESERVE the original CV's section order and structure EXACTLY — only improve the CONTENT within each section
+- Keep ALL original section headings (e.g., CONTACT, SKILLS, OBJECTIVE, WORK EXPERIENCE, EDUCATION, etc.) in the SAME order they appear in the original CV
+- Do NOT rearrange, merge, split, or rename sections — the user wants their CV layout preserved
+- Apply every grammar fix, impact improvement, quantification, and formatting enhancement WITHIN the existing sections
+- Add missing keywords and skills in the appropriate existing sections (e.g., add skills to the SKILLS section, not elsewhere)
+- Improve bullet points with stronger action verbs and quantified achievements, but keep them in their original sections
 - The result must be a ready-to-use, professional CV that the candidate can immediately download and submit
 - Do NOT leave any placeholders — fill everything with the improved text
 - ABSOLUTELY NEVER write messages like "the corrected CV text is too long" or "corrections can be used to create a revised version" or any excuse for not providing the full text
@@ -87,9 +91,11 @@ COVER LETTER RULES:
   * Candidate's full name with title (Mr./Ms./Mrs.)
   * "Cell: [phone number]"
 - The body MUST contain 3 to 4 distinct paragraphs — NOT 1, NOT 2, NOT 5+. Each paragraph should be 3-5 sentences.
-- Reference SPECIFIC achievements and skills from the CV — not generic
+- Reference SPECIFIC achievements, metrics, and skills from the CV — not generic platitudes
+- Every paragraph must contain at least one CONCRETE detail from the candidate's actual CV (project names, percentages, technologies, company names)
 - The tone must be professional, confident, and respectful — suitable for formal applications in any country
 - Do NOT write a generic template — make it SPECIFIC to this candidate's actual background
+- The cover letter must "speak the CV" — it should showcase the same achievements and skills found in the CV, presented in narrative form
 
 INTERVIEW PREP RULES:
 - Provide 8-10 likely interview questions based on the CV content and target role
@@ -117,9 +123,26 @@ JOB DESCRIPTION MATCHING RULES:
 - List ALL missing requirements from the JD that the CV does NOT address.
 - Provide 5+ tailored suggestions on how to modify the CV to better match THIS specific JD.
 - Calculate keyword_alignment (0-100) between the CV and JD.
-- The tailored_cover_letter MUST be specifically written for THIS job description.
 - Interview prep questions should be based on BOTH the CV and the JD.
-- The company_research section should analyze the company from the JD: infer company name, industry, culture insights, values, interview focus areas, and talking points the candidate can use.
+
+COMPANY-TAILORED CV CORRECTION (CRITICAL):
+- When a job description is provided, the "corrected_cv_text" must be SPECIFICALLY TAILORED for THIS company and THIS role.
+- Inject keywords, skills, and terminology from the JD into the CV naturally — in the SKILLS section, OBJECTIVE/SUMMARY, and EXPERIENCE bullets.
+- Rewrite the OBJECTIVE/SUMMARY to align with the specific role and company from the JD.
+- Rewrite experience bullet points to emphasize achievements that MATCH what the company is looking for.
+- Add any missing skills from the JD into the SKILLS section.
+- The corrected CV should read as if it was WRITTEN for this specific job opening — not a generic CV.
+- PRESERVE the original CV structure and section order — only tailor the CONTENT to the company.
+
+COMPANY-TAILORED COVER LETTER (CRITICAL):
+- The "cover_letter" and "tailored_cover_letter" fields MUST be written specifically for THIS company and THIS job.
+- The cover letter must mention the company name, the role title, and reference specific requirements from the JD.
+- Each paragraph must connect the candidate's ACTUAL CV achievements to what THIS company needs.
+- Paragraph 1: State the specific position at THIS company, show awareness of the company.
+- Paragraph 2: Match the candidate's SPECIFIC experience from their CV to the JD requirements — use real achievements and metrics from the CV.
+- Paragraph 3: Highlight additional skills/projects from the CV that align with this company's needs.
+- Paragraph 4: Express genuine motivation for THIS specific company, reference company values/culture from the JD.
+- The cover letter must feel like it was HANDCRAFTED for this company — not a template.
 
 COMPANY RESEARCH RULES:
 - Extract or infer the company name from the job description

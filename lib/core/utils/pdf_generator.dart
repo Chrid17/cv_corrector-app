@@ -4,6 +4,12 @@ import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'platform_save.dart' as platform;
 
 class PdfGenerator {
+  static final _accentColor = PdfColor(56, 189, 248);
+  static final _darkColor = PdfColor(15, 23, 42);
+  static final _grayColor = PdfColor(100, 116, 139);
+  static final _lightBg = PdfColor(241, 245, 249);
+  static final _white = PdfColor(255, 255, 255);
+
   static Future<Uint8List> generateCoverLetterPdfBytes({
     required String coverLetterText,
     required String candidateName,
@@ -75,92 +81,293 @@ class PdfGenerator {
     required String candidateName,
   }) async {
     final document = PdfDocument();
+    document.pageSettings.margins.all = 0;
 
-    final titleFont = PdfStandardFont(PdfFontFamily.helvetica, 13, style: PdfFontStyle.bold);
-    final sectionFont = PdfStandardFont(PdfFontFamily.helvetica, 11, style: PdfFontStyle.bold);
-    final bodyFont = PdfStandardFont(PdfFontFamily.helvetica, 10);
-    final smallFont = PdfStandardFont(PdfFontFamily.helvetica, 9);
+    final nameFont = PdfStandardFont(PdfFontFamily.helvetica, 22, style: PdfFontStyle.bold);
+    final titleFont = PdfStandardFont(PdfFontFamily.helvetica, 12, style: PdfFontStyle.italic);
+    final sectionFont = PdfStandardFont(PdfFontFamily.helvetica, 12, style: PdfFontStyle.bold);
+    final bodyFont = PdfStandardFont(PdfFontFamily.helvetica, 9.5);
+    final bodyBoldFont = PdfStandardFont(PdfFontFamily.helvetica, 9.5, style: PdfFontStyle.bold);
+    final smallFont = PdfStandardFont(PdfFontFamily.helvetica, 8);
+    final contactFont = PdfStandardFont(PdfFontFamily.helvetica, 9);
+
+    final lines = correctedCvText.split('\n');
+    final sections = _parseSections(lines);
+
+    final leftMargin = 45.0;
+    final rightMargin = 45.0;
 
     PdfPage page = document.pages.add();
     final pageSize = page.getClientSize();
+    final contentWidth = pageSize.width - leftMargin - rightMargin;
     double y = 0;
 
-    final lines = correctedCvText.split('\n');
+    final accentBrush = PdfSolidBrush(_accentColor);
+    final darkBrush = PdfSolidBrush(_darkColor);
+    final grayBrush = PdfSolidBrush(_grayColor);
+    final whiteBrush = PdfSolidBrush(_white);
 
-    final sectionKeywords = [
-      'PROFILE', 'SUMMARY', 'OBJECTIVE', 'EXPERIENCE', 'WORK EXPERIENCE',
-      'EDUCATION', 'SKILLS', 'TECHNICAL SKILLS', 'PROJECTS', 'CERTIFICATIONS',
-      'AWARDS', 'REFERENCES', 'LANGUAGES', 'INTERESTS', 'CONTACT',
-      'PROFESSIONAL SUMMARY', 'PERSONAL DETAILS', 'QUALIFICATIONS',
-    ];
+    // Header background
+    page.graphics.drawRectangle(
+      brush: PdfSolidBrush(_darkColor),
+      bounds: Rect.fromLTWH(0, 0, pageSize.width, 90),
+    );
 
-    bool isFirstLine = true;
+    // Accent strip
+    page.graphics.drawRectangle(
+      brush: accentBrush,
+      bounds: Rect.fromLTWH(0, 90, pageSize.width, 4),
+    );
 
-    for (final line in lines) {
-      final trimmed = line.trim();
+    // Name in header
+    final displayName = sections['_name'] ?? candidateName;
+    page.graphics.drawString(
+      displayName.toUpperCase(),
+      nameFont,
+      brush: whiteBrush,
+      bounds: Rect.fromLTWH(leftMargin, 20, contentWidth, 35),
+      format: PdfStringFormat(alignment: PdfTextAlignment.center),
+    );
 
-      if (trimmed.isEmpty) {
-        y += 10;
-        continue;
-      }
+    // Title/role in header
+    final displayTitle = sections['_title'] ?? '';
+    if (displayTitle.isNotEmpty) {
+      page.graphics.drawString(
+        displayTitle.toUpperCase(),
+        titleFont,
+        brush: PdfSolidBrush(PdfColor(148, 163, 184)),
+        bounds: Rect.fromLTWH(leftMargin, 55, contentWidth, 25),
+        format: PdfStringFormat(alignment: PdfTextAlignment.center),
+      );
+    }
 
-      PdfFont font;
-      bool drawLine = false;
+    y = 105;
 
-      if (isFirstLine) {
-        font = titleFont;
-        isFirstLine = false;
-      } else if (sectionKeywords.any((kw) => trimmed.toUpperCase().startsWith(kw))) {
-        font = sectionFont;
-        drawLine = true;
-        y += 8;
-      } else {
-        font = bodyFont;
-      }
-
-      if (y > pageSize.height - 80) {
-        page = document.pages.add();
-        y = 20;
-      }
-
-      if (drawLine) {
-        page.graphics.drawLine(
-          PdfPen(PdfColor(56, 189, 248), width: 1.5),
-          Offset(40, y - 2),
-          Offset(pageSize.width - 40, y - 2),
+    // Contact info
+    if (sections.containsKey('CONTACT')) {
+      final contactLines = sections['CONTACT']!.split('\n').where((l) => l.trim().isNotEmpty).toList();
+      if (contactLines.isNotEmpty) {
+        page.graphics.drawRectangle(
+          brush: PdfSolidBrush(_lightBg),
+          bounds: Rect.fromLTWH(0, y, pageSize.width, 30),
         );
-        y += 4;
-      }
-
-      final textElement = PdfTextElement(
-        text: trimmed,
-        font: font,
-        brush: PdfBrushes.black,
-        format: PdfStringFormat(lineSpacing: 3),
-      );
-
-      final layoutResult = textElement.draw(
-        page: page,
-        bounds: Rect.fromLTWH(40, y, pageSize.width - 80, pageSize.height - y - 40),
-      );
-
-      if (layoutResult != null) {
-        y = layoutResult.bounds.bottom + 3;
-      } else {
-        y += 14;
+        final contactStr = contactLines.join('  |  ');
+        page.graphics.drawString(
+          contactStr,
+          contactFont,
+          brush: grayBrush,
+          bounds: Rect.fromLTWH(leftMargin, y + 8, contentWidth, 20),
+          format: PdfStringFormat(alignment: PdfTextAlignment.center),
+        );
+        y += 40;
       }
     }
 
-    page.graphics.drawString(
+    // Render remaining sections
+    final sectionOrder = [
+      'OBJECTIVE', 'SUMMARY', 'PROFESSIONAL SUMMARY', 'PROFILE',
+      'SKILLS', 'TECHNICAL SKILLS',
+      'WORK EXPERIENCE', 'EXPERIENCE', 'PROFESSIONAL EXPERIENCE',
+      'EDUCATION',
+      'PROJECTS', 'CERTIFICATIONS', 'CERTIFICATES',
+      'AWARDS', 'ACHIEVEMENTS',
+      'LANGUAGES', 'INTERESTS', 'HOBBIES',
+      'REFERENCES', 'PERSONAL DETAILS', 'QUALIFICATIONS',
+    ];
+
+    final renderedSections = <String>{};
+
+    for (final sectionKey in sectionOrder) {
+      if (!sections.containsKey(sectionKey)) continue;
+      renderedSections.add(sectionKey);
+
+      if (y > pageSize.height - 100) {
+        page = document.pages.add();
+        y = 30;
+      }
+
+      y += 10;
+
+      // Section heading with accent line
+      page.graphics.drawLine(
+        PdfPen(_accentColor, width: 2),
+        Offset(leftMargin, y),
+        Offset(leftMargin + 120, y),
+      );
+      y += 6;
+
+      page.graphics.drawString(
+        sectionKey,
+        sectionFont,
+        brush: darkBrush,
+        bounds: Rect.fromLTWH(leftMargin, y, contentWidth, 18),
+      );
+      y += 22;
+
+      // Section content
+      final sectionLines = sections[sectionKey]!.split('\n');
+      for (final line in sectionLines) {
+        final trimmed = line.trim();
+        if (trimmed.isEmpty) {
+          y += 6;
+          continue;
+        }
+
+        if (y > pageSize.height - 50) {
+          page = document.pages.add();
+          y = 30;
+        }
+
+        final isBullet = trimmed.startsWith('-') || trimmed.startsWith('•') || trimmed.startsWith('*');
+        final isSubheading = _isSubheading(trimmed);
+
+        final font = isSubheading ? bodyBoldFont : bodyFont;
+        final displayText = isBullet
+            ? '  •  ${trimmed.substring(1).trim()}'
+            : trimmed;
+
+        final textElement = PdfTextElement(
+          text: displayText,
+          font: font,
+          brush: isSubheading ? darkBrush : PdfSolidBrush(PdfColor(51, 65, 85)),
+          format: PdfStringFormat(lineSpacing: 2.5),
+        );
+
+        final layoutResult = textElement.draw(
+          page: page,
+          bounds: Rect.fromLTWH(leftMargin, y, contentWidth, pageSize.height - y - 40),
+        );
+
+        if (layoutResult != null) {
+          y = layoutResult.bounds.bottom + 3;
+        } else {
+          y += 13;
+        }
+      }
+    }
+
+    // Render any sections not in our predefined order
+    for (final entry in sections.entries) {
+      if (entry.key.startsWith('_') || entry.key == 'CONTACT' || renderedSections.contains(entry.key)) continue;
+
+      if (y > pageSize.height - 100) {
+        page = document.pages.add();
+        y = 30;
+      }
+
+      y += 10;
+      page.graphics.drawLine(
+        PdfPen(_accentColor, width: 2),
+        Offset(leftMargin, y),
+        Offset(leftMargin + 120, y),
+      );
+      y += 6;
+
+      page.graphics.drawString(entry.key, sectionFont, brush: darkBrush,
+        bounds: Rect.fromLTWH(leftMargin, y, contentWidth, 18));
+      y += 22;
+
+      for (final line in entry.value.split('\n')) {
+        final trimmed = line.trim();
+        if (trimmed.isEmpty) { y += 6; continue; }
+        if (y > pageSize.height - 50) { page = document.pages.add(); y = 30; }
+
+        final isBullet = trimmed.startsWith('-') || trimmed.startsWith('•') || trimmed.startsWith('*');
+        final displayText = isBullet ? '  •  ${trimmed.substring(1).trim()}' : trimmed;
+
+        final textElement = PdfTextElement(
+          text: displayText, font: bodyFont,
+          brush: PdfSolidBrush(PdfColor(51, 65, 85)),
+          format: PdfStringFormat(lineSpacing: 2.5),
+        );
+        final layoutResult = textElement.draw(
+          page: page, bounds: Rect.fromLTWH(leftMargin, y, contentWidth, pageSize.height - y - 40));
+        y = layoutResult != null ? layoutResult.bounds.bottom + 3 : y + 13;
+      }
+    }
+
+    // Footer
+    final lastPage = document.pages[document.pages.count - 1];
+    lastPage.graphics.drawString(
       'Generated by CV Analyzer Pro',
       smallFont,
-      brush: PdfBrushes.gray,
-      bounds: Rect.fromLTWH(40, pageSize.height - 30, pageSize.width - 80, 20),
+      brush: PdfSolidBrush(_grayColor),
+      bounds: Rect.fromLTWH(leftMargin, pageSize.height - 25, contentWidth, 15),
+      format: PdfStringFormat(alignment: PdfTextAlignment.right),
     );
 
     final bytes = Uint8List.fromList(await document.save());
     document.dispose();
     return bytes;
+  }
+
+  static Map<String, String> _parseSections(List<String> lines) {
+    final sections = <String, String>{};
+    final sectionKeywords = [
+      'CONTACT', 'PROFILE', 'SUMMARY', 'OBJECTIVE', 'PROFESSIONAL SUMMARY',
+      'EXPERIENCE', 'WORK EXPERIENCE', 'PROFESSIONAL EXPERIENCE',
+      'EDUCATION', 'SKILLS', 'TECHNICAL SKILLS',
+      'PROJECTS', 'CERTIFICATIONS', 'CERTIFICATES',
+      'AWARDS', 'ACHIEVEMENTS', 'REFERENCES', 'LANGUAGES',
+      'INTERESTS', 'HOBBIES', 'PERSONAL DETAILS', 'QUALIFICATIONS',
+    ];
+
+    String? currentSection;
+    final buffer = StringBuffer();
+    bool nameFound = false;
+    bool titleFound = false;
+
+    for (int i = 0; i < lines.length; i++) {
+      final trimmed = lines[i].trim();
+      if (trimmed.isEmpty) {
+        buffer.writeln();
+        continue;
+      }
+
+      final upper = trimmed.toUpperCase();
+      final matchedSection = sectionKeywords.firstWhere(
+        (kw) => upper == kw || upper.startsWith('$kw:') || upper.startsWith('$kw '),
+        orElse: () => '',
+      );
+
+      if (matchedSection.isNotEmpty) {
+        if (currentSection != null) {
+          sections[currentSection!] = buffer.toString().trim();
+        }
+        currentSection = matchedSection;
+        buffer.clear();
+        final remainder = trimmed.substring(matchedSection.length).trim();
+        if (remainder.startsWith(':')) {
+          buffer.writeln(remainder.substring(1).trim());
+        } else if (remainder.isNotEmpty) {
+          buffer.writeln(remainder);
+        }
+      } else if (currentSection == null) {
+        if (!nameFound) {
+          sections['_name'] = trimmed;
+          nameFound = true;
+        } else if (!titleFound) {
+          sections['_title'] = trimmed;
+          titleFound = true;
+        }
+      } else {
+        buffer.writeln(trimmed);
+      }
+    }
+
+    if (currentSection != null) {
+      sections[currentSection!] = buffer.toString().trim();
+    }
+
+    return sections;
+  }
+
+  static bool _isSubheading(String text) {
+    if (text.contains(' - ') && text.split(' - ').length == 2) return true;
+    if (RegExp(r'(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}', caseSensitive: false).hasMatch(text)) return true;
+    if (text.endsWith(':')) return true;
+    if (RegExp(r'\d{4}\s*[-–]\s*(Present|\d{4})', caseSensitive: false).hasMatch(text)) return true;
+    return false;
   }
 
   static Future<String?> savePdf(Uint8List bytes, String fileName) async {

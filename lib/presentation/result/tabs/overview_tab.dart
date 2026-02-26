@@ -157,7 +157,9 @@ class _OverviewTabState extends State<OverviewTab> {
                     Text('Corrected CV Ready', style: AppTextStyles.headingSmall),
                     const SizedBox(height: 2),
                     Text(
-                      'All corrections and improvements have been applied',
+                      result.hasJobDescription
+                          ? 'Tailored for the company — corrections & keywords applied'
+                          : 'All corrections and improvements have been applied',
                       style: AppTextStyles.bodySmall,
                     ),
                   ],
@@ -195,6 +197,27 @@ class _OverviewTabState extends State<OverviewTab> {
               const SizedBox(width: 16),
               CopyButton(text: result.correctedCvText),
             ],
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.accent.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.accent.withOpacity(0.2)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.tips_and_updates_outlined, color: AppColors.accent, size: 16),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Tip: Copy the corrected text and apply changes to your original CV design for the best result.',
+                    style: AppTextStyles.bodySmall.copyWith(color: AppColors.accent, fontSize: 10),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

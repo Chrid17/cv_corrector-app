@@ -3,7 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 class PdfUtils {
-  static Future<({String text, String fileName})?> pickAndExtractText() async {
+  static Future<({String text, String fileName, Uint8List? pdfBytes})?> pickAndExtractText() async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -17,12 +17,14 @@ class PdfUtils {
         final extension = result.files.single.extension?.toLowerCase();
 
         String text;
+        Uint8List? pdfBytes;
         if (extension == 'pdf') {
           text = _extractTextFromPdfBytes(bytes);
+          pdfBytes = bytes;
         } else {
           text = String.fromCharCodes(bytes);
         }
-        return (text: text, fileName: fileName);
+        return (text: text, fileName: fileName, pdfBytes: pdfBytes);
       }
       return null;
     } catch (e) {
