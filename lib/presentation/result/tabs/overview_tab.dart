@@ -22,7 +22,7 @@ class _OverviewTabState extends State<OverviewTab> {
     final result = widget.result;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
-      child: Column(
+      child: ResponsiveContent(child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildAtsHero(result),
@@ -122,7 +122,7 @@ class _OverviewTabState extends State<OverviewTab> {
           ).animate().fadeIn(delay: 500.ms),
           const SizedBox(height: 40),
         ],
-      ),
+      )),
     );
   }
 

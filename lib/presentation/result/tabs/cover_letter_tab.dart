@@ -25,7 +25,7 @@ class _CoverLetterTabState extends State<CoverLetterTab> {
     final r = widget.result;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
-      child: Column(
+      child: ResponsiveContent(child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Cover Letter Review (if user uploaded one)
@@ -139,7 +139,7 @@ class _CoverLetterTabState extends State<CoverLetterTab> {
           ).animate().fadeIn(delay: 400.ms),
           const SizedBox(height: 40),
         ],
-      ),
+      )),
     );
   }
 

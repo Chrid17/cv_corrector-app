@@ -13,7 +13,7 @@ class InterviewTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
-      child: Column(
+      child: ResponsiveContent(child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Intro card
@@ -124,7 +124,7 @@ class InterviewTab extends StatelessWidget {
           ).animate().fadeIn(delay: 600.ms),
           const SizedBox(height: 40),
         ],
-      ),
+      )),
     );
   }
 

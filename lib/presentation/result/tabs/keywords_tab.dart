@@ -18,7 +18,7 @@ class KeywordsTab extends StatelessWidget {
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
-      child: Column(
+      child: ResponsiveContent(child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Keyword match rate
@@ -130,7 +130,7 @@ class KeywordsTab extends StatelessWidget {
           ).animate().fadeIn(delay: 450.ms),
           const SizedBox(height: 40),
         ],
-      ),
+      )),
     );
   }
 

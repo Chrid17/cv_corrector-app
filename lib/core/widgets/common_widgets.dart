@@ -257,6 +257,28 @@ class _CopyButtonState extends State<CopyButton> {
   }
 }
 
+// ─── Responsive Content ──────────────────────────────────────────────────────
+class ResponsiveContent extends StatelessWidget {
+  final Widget child;
+  final double maxWidth;
+
+  const ResponsiveContent({
+    super.key,
+    required this.child,
+    this.maxWidth = 720,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: child,
+      ),
+    );
+  }
+}
+
 // ─── Section Divider ──────────────────────────────────────────────────────────
 class SectionDivider extends StatelessWidget {
   final String label;

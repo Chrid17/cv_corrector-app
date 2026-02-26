@@ -14,7 +14,7 @@ class SkillsTab extends StatelessWidget {
     final s = result.skillsAnalysis;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
-      child: Column(
+      child: ResponsiveContent(child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Technical skills
@@ -90,7 +90,7 @@ class SkillsTab extends StatelessWidget {
             ).animate().fadeIn(delay: 450.ms),
           const SizedBox(height: 40),
         ],
-      ),
+      )),
     );
   }
 }

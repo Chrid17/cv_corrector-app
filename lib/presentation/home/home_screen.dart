@@ -123,6 +123,7 @@ class _AnalyzeTabState extends State<_AnalyzeTab> {
         }
         return SingleChildScrollView(
           padding: const EdgeInsets.all(20),
+          child: ResponsiveContent(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -188,6 +189,7 @@ class _AnalyzeTabState extends State<_AnalyzeTab> {
                 ),
               const SizedBox(height: 40),
             ],
+          ),
           ),
         );
       },

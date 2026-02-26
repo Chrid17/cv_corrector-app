@@ -23,7 +23,7 @@ class JobMatchTab extends StatelessWidget {
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
-      child: Column(
+      child: ResponsiveContent(child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Match Score Hero
@@ -156,7 +156,7 @@ class JobMatchTab extends StatelessWidget {
             ).animate().fadeIn(delay: 300.ms),
           const SizedBox(height: 40),
         ],
-      ),
+      )),
     );
   }
 

@@ -14,7 +14,7 @@ class FollowUpTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
-      child: Column(
+      child: ResponsiveContent(child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Follow-up Email
@@ -143,7 +143,7 @@ class FollowUpTab extends StatelessWidget {
 
           const SizedBox(height: 40),
         ],
-      ),
+      )),
     );
   }
 
