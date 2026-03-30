@@ -31,26 +31,31 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
-        title: GestureDetector(
-          onLongPress: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const SettingsScreen()),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text('CV', style: AppTextStyles.headingLarge.copyWith(color: AppColors.background, fontSize: 14)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                gradient: AppColors.primaryGradient,
+                borderRadius: BorderRadius.circular(8),
               ),
-              const SizedBox(width: 6),
-              Text('Analyzer Pro', style: AppTextStyles.headingLarge.copyWith(color: AppColors.primary)),
-            ],
-          ),
+              child: Text('CV', style: AppTextStyles.headingLarge.copyWith(color: AppColors.background, fontSize: 14)),
+            ),
+            const SizedBox(width: 6),
+            Text('Analyzer Pro', style: AppTextStyles.headingLarge.copyWith(color: AppColors.primary)),
+          ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined, color: AppColors.textSecondary),
+            tooltip: 'Settings',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            ),
+          ),
+          const SizedBox(width: 4),
+        ],
       ),
       body: _tabs[_selectedTab],
       bottomNavigationBar: Container(
@@ -164,6 +169,12 @@ class _AnalyzeTabState extends State<_AnalyzeTab> {
                 onToggle: () => setState(() => _showCoverLetterSection = !_showCoverLetterSection),
                 child: _buildCoverLetterSection(context, provider),
               ),
+
+              const SizedBox(height: 16),
+
+              // Target Industry / Role
+              _buildIndustryRoleSection(provider),
+
               const SizedBox(height: 24),
 
               // Error
@@ -448,6 +459,100 @@ class _AnalyzeTabState extends State<_AnalyzeTab> {
         ),
       ],
     );
+  }
+
+  Widget _buildIndustryRoleSection(CvProvider provider) {
+    const industries = [
+      '', 'Technology / IT', 'Finance & Banking', 'Healthcare & Medical',
+      'Engineering', 'Education', 'Marketing & Advertising', 'Legal',
+      'Manufacturing', 'Government / Public Sector', 'Hospitality & Tourism',
+      'Retail & E-Commerce', 'Telecommunications', 'Energy & Mining',
+      'Non-Profit / NGO', 'Media & Entertainment', 'Agriculture',
+      'Construction & Real Estate', 'Consulting', 'Transportation & Logistics',
+      'Other',
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: provider.hasTargetIndustry ? AppColors.primary.withOpacity(0.5) : AppColors.border,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: provider.hasTargetIndustry
+                      ? AppColors.primary.withOpacity(0.15)
+                      : AppColors.surfaceLight,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.factory_outlined,
+                    color: provider.hasTargetIndustry ? AppColors.primary : AppColors.textSecondary, size: 18),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('4. Target Industry & Role',
+                        style: AppTextStyles.headingSmall.copyWith(fontSize: 14)),
+                    Text('Optional — sharpens analysis for your field',
+                        style: AppTextStyles.bodySmall.copyWith(fontSize: 11)),
+                  ],
+                ),
+              ),
+              if (provider.hasTargetIndustry)
+                Icon(Icons.check_circle, color: AppColors.primary, size: 18),
+            ],
+          ),
+          const SizedBox(height: 14),
+          DropdownButtonFormField<String>(
+            value: provider.targetIndustry.isEmpty ? '' : provider.targetIndustry,
+            dropdownColor: AppColors.surface,
+            style: AppTextStyles.bodyLarge.copyWith(fontSize: 13),
+            decoration: InputDecoration(
+              labelText: 'Industry',
+              labelStyle: AppTextStyles.bodySmall,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: AppColors.border),
+              ),
+            ),
+            items: industries.map((i) => DropdownMenuItem(
+              value: i,
+              child: Text(i.isEmpty ? 'Select industry...' : i,
+                  style: TextStyle(color: i.isEmpty ? AppColors.textSecondary : AppColors.textPrimary, fontSize: 13)),
+            )).toList(),
+            onChanged: (v) => provider.setTargetIndustry(v ?? ''),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            style: AppTextStyles.bodyLarge.copyWith(fontSize: 13),
+            decoration: InputDecoration(
+              labelText: 'Target Role (e.g., Senior Software Engineer)',
+              labelStyle: AppTextStyles.bodySmall,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: AppColors.border),
+              ),
+            ),
+            onChanged: (v) => provider.setTargetRole(v),
+          ),
+        ],
+      ),
+    ).animate().fadeIn();
   }
 
   Widget _buildHero(BuildContext context) {

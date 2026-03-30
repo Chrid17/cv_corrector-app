@@ -1,20 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
-import '../../providers/cv_provider.dart';
+import '../../../domain/entities/cv_analysis.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/widgets/common_widgets.dart';
 
 class ProposedChangesTab extends StatelessWidget {
-  const ProposedChangesTab({super.key});
+  final CvAnalysis result;
+  const ProposedChangesTab({super.key, required this.result});
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<CvProvider>();
-    final result = provider.currentResult;
-
-    if (result == null || result.proposedChanges.isEmpty) {
+    if (result.proposedChanges.isEmpty) {
       return const EmptyState(
         icon: Icons.auto_awesome_outlined,
         title: 'No proposed changes',

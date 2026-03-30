@@ -67,17 +67,29 @@ class CvRemoteDataSource {
     String apiKey, {
     String? jobDescription,
     String? coverLetterText,
+    String? targetIndustry,
+    String? targetRole,
   }) async {
     final hasJD = jobDescription != null && jobDescription.isNotEmpty;
     final hasCL = coverLetterText != null && coverLetterText.isNotEmpty;
+    final hasIndustry = targetIndustry != null && targetIndustry.isNotEmpty;
+    final hasRole = targetRole != null && targetRole.isNotEmpty;
 
     final systemPrompt = AppStrings.buildSystemPrompt(
       hasJobDescription: hasJD,
       hasCoverLetter: hasCL,
+      targetIndustry: hasIndustry ? targetIndustry : null,
+      targetRole: hasRole ? targetRole : null,
     );
 
     final userMessageBuffer = StringBuffer();
     userMessageBuffer.writeln('Please analyze this CV thoroughly and return the JSON response:\n');
+    if (hasIndustry || hasRole) {
+      userMessageBuffer.writeln('=== TARGET CONTEXT ===');
+      if (hasIndustry) userMessageBuffer.writeln('Target Industry: $targetIndustry');
+      if (hasRole) userMessageBuffer.writeln('Target Role: $targetRole');
+      userMessageBuffer.writeln();
+    }
     userMessageBuffer.writeln('=== CV/RESUME ===');
     userMessageBuffer.writeln(cvText);
 

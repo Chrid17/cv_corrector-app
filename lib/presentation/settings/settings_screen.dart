@@ -120,23 +120,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
               accentColor: AppColors.success,
               child: Column(
                 children: [
-                  _secItem('Your API key is stored only on your device.'),
-                  _secItem('CV text is processed securely — never stored on any server.'),
-                  _secItem('Analysis results are saved locally on your device only.'),
-                  _secItem('We never collect personal data.'),
+                  _secItem('Your API key is stored only on this device.'),
+                  _secItem('CV text is sent to Groq for analysis only — it is not stored or used for training.'),
+                  _secItem('Analysis results are saved locally on your device.'),
+                  _secItem('No personal data is collected by this application.'),
                 ],
               ),
             ).animate().fadeIn(delay: 150.ms),
             const SizedBox(height: 20),
 
-            // App info
             InfoCard(
               title: '📱 About CV Analyzer Pro',
               accentColor: AppColors.textSecondary,
               child: Column(
                 children: [
                   _infoRow('Version', '2.0.0'),
-                  _infoRow('Platform', 'Built with Flutter'),
+                  _infoRow('Platform', 'Cross-platform (Flutter)'),
+                  _infoRow('Engine', 'Groq — Llama 3.3 70B'),
                 ],
               ),
             ).animate().fadeIn(delay: 300.ms),

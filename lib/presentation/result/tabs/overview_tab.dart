@@ -187,9 +187,20 @@ class _OverviewTabState extends State<OverviewTab> {
               GestureDetector(
                 onTap: () => _showCorrectedCvPreview(context, result),
                 child: Text(
-                  'Preview corrected CV',
+                  'Preview',
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.primary,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              GestureDetector(
+                onTap: () => _showBeforeAfterComparison(context, result),
+                child: Text(
+                  'Before vs After',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.accent,
                     decoration: TextDecoration.underline,
                   ),
                 ),
@@ -220,6 +231,35 @@ class _OverviewTabState extends State<OverviewTab> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showBeforeAfterComparison(BuildContext context, CvAnalysis result) {
+    if (result.rawCvText.isEmpty || result.correctedCvText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Comparison data not available.'), backgroundColor: AppColors.warning),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => Dialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        insetPadding: const EdgeInsets.all(16),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.9,
+            maxWidth: 900,
+          ),
+          child: _BeforeAfterView(
+            originalText: result.rawCvText,
+            correctedText: result.correctedCvText,
+            onClose: () => Navigator.pop(dialogCtx),
+          ),
+        ),
       ),
     );
   }
@@ -396,6 +436,126 @@ class _OverviewTabState extends State<OverviewTab> {
           ),
           const SizedBox(height: 8),
           Text(result.careerLevel, style: AppTextStyles.label.copyWith(color: AppColors.accent), maxLines: 2, overflow: TextOverflow.ellipsis),
+        ],
+      ),
+    );
+  }
+}
+
+class _BeforeAfterView extends StatefulWidget {
+  final String originalText;
+  final String correctedText;
+  final VoidCallback onClose;
+
+  const _BeforeAfterView({
+    required this.originalText,
+    required this.correctedText,
+    required this.onClose,
+  });
+
+  @override
+  State<_BeforeAfterView> createState() => _BeforeAfterViewState();
+}
+
+class _BeforeAfterViewState extends State<_BeforeAfterView> with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isWide = MediaQuery.of(context).size.width > 700;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 8, 0),
+          child: Row(
+            children: [
+              const Icon(Icons.compare_arrows_rounded, color: AppColors.accent),
+              const SizedBox(width: 10),
+              Expanded(child: Text('Before vs After', style: AppTextStyles.headingMedium)),
+              IconButton(icon: const Icon(Icons.close, color: AppColors.textSecondary), onPressed: widget.onClose),
+            ],
+          ),
+        ),
+        const Divider(color: AppColors.border, height: 1),
+        if (isWide)
+          Flexible(
+            child: Row(
+              children: [
+                Expanded(child: _buildPane('Original CV', widget.originalText, AppColors.error.withOpacity(0.15), AppColors.error)),
+                Container(width: 1, color: AppColors.border),
+                Expanded(child: _buildPane('Corrected CV', widget.correctedText, AppColors.success.withOpacity(0.15), AppColors.success)),
+              ],
+            ),
+          )
+        else ...[
+          TabBar(
+            controller: _tabController,
+            indicatorColor: AppColors.primary,
+            labelColor: AppColors.primary,
+            unselectedLabelColor: AppColors.textSecondary,
+            labelStyle: AppTextStyles.label.copyWith(fontSize: 12),
+            tabs: const [Tab(text: 'Original'), Tab(text: 'Corrected')],
+          ),
+          Flexible(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildPane('Original CV', widget.originalText, AppColors.error.withOpacity(0.08), AppColors.error),
+                _buildPane('Corrected CV', widget.correctedText, AppColors.success.withOpacity(0.08), AppColors.success),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildPane(String title, String text, Color bgColor, Color accentColor) {
+    return Container(
+      color: bgColor,
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            color: accentColor.withOpacity(0.12),
+            child: Row(
+              children: [
+                Icon(
+                  title.contains('Original') ? Icons.history : Icons.auto_fix_high,
+                  color: accentColor,
+                  size: 16,
+                ),
+                const SizedBox(width: 8),
+                Text(title, style: AppTextStyles.label.copyWith(color: accentColor)),
+                const Spacer(),
+                CopyButton(text: text),
+              ],
+            ),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: SelectableText(
+                text,
+                style: AppTextStyles.bodyLarge.copyWith(height: 1.7, fontSize: 12),
+              ),
+            ),
+          ),
         ],
       ),
     );

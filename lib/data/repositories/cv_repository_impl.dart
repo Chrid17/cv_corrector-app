@@ -21,12 +21,16 @@ class CvRepositoryImpl implements CvRepository {
     String apiKey, {
     String? jobDescription,
     String? coverLetterText,
+    String? targetIndustry,
+    String? targetRole,
   }) async {
     final model = await _remoteDataSource.analyzeCv(
       cvText,
       apiKey,
       jobDescription: jobDescription,
       coverLetterText: coverLetterText,
+      targetIndustry: targetIndustry,
+      targetRole: targetRole,
     );
     return model.toEntity();
   }

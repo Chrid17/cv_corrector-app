@@ -52,6 +52,8 @@ class CvProvider with ChangeNotifier {
   String _coverLetterFileName = '';
   bool _isExtractingImage = false;
   Uint8List? _originalCvPdfBytes;
+  String _targetIndustry = '';
+  String _targetRole = '';
 
   // --- Getters ---
   String get apiKey => _apiKey;
@@ -74,6 +76,9 @@ class CvProvider with ChangeNotifier {
   bool get hasJdImage => _jdImageBytes != null;
   bool get isExtractingImage => _isExtractingImage;
   Uint8List? get originalCvPdfBytes => _originalCvPdfBytes;
+  String get targetIndustry => _targetIndustry;
+  String get targetRole => _targetRole;
+  bool get hasTargetIndustry => _targetIndustry.isNotEmpty;
 
   // --- Setters ---
   void setCvText(String text, {String? fileName, Uint8List? pdfBytes}) {
@@ -119,6 +124,16 @@ class CvProvider with ChangeNotifier {
   void clearCoverLetter() {
     _coverLetterText = '';
     _coverLetterFileName = '';
+    notifyListeners();
+  }
+
+  void setTargetIndustry(String industry) {
+    _targetIndustry = industry;
+    notifyListeners();
+  }
+
+  void setTargetRole(String role) {
+    _targetRole = role;
     notifyListeners();
   }
 
@@ -189,6 +204,8 @@ class CvProvider with ChangeNotifier {
         _apiKey,
         jobDescription: hasJobDescription ? _jobDescriptionText : null,
         coverLetterText: hasCoverLetter ? _coverLetterText : null,
+        targetIndustry: hasTargetIndustry ? _targetIndustry : null,
+        targetRole: _targetRole.isNotEmpty ? _targetRole : null,
       );
 
       _history = await _getHistoryUseCase();

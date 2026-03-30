@@ -12,6 +12,8 @@ class AppStrings {
   static String buildSystemPrompt({
     bool hasJobDescription = false,
     bool hasCoverLetter = false,
+    String? targetIndustry,
+    String? targetRole,
   }) {
     final buffer = StringBuffer();
 
@@ -112,6 +114,20 @@ LEARNING PATH:
 - Focus on skills that would have the highest ROI for their career progression
 
 ''');
+
+    if (targetIndustry != null || targetRole != null) {
+      buffer.writeln('''
+
+INDUSTRY-SPECIFIC ANALYSIS:${targetIndustry != null ? '\n- The candidate is targeting the **$targetIndustry** industry.' : ''}${targetRole != null ? '\n- The candidate is targeting the role of **$targetRole**.' : ''}
+- ALL advice, keywords, skills, corrections, and suggestions MUST be tailored specifically for this industry/role.
+- Use industry-specific terminology, standards, and best practices.
+- Keywords must include the most critical ATS keywords for this specific industry.
+- Skills recommendations must reflect what hiring managers in THIS industry prioritize.
+- Interview questions must reflect what THIS industry typically asks.
+- The corrected CV must use language and achievements that resonate with recruiters in THIS field.
+- The cover letter must demonstrate awareness of industry trends and challenges.
+- Learning path recommendations must include industry-recognized certifications and tools.''');
+    }
 
     if (hasJobDescription) {
       buffer.writeln('''

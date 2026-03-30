@@ -12,6 +12,8 @@ class AnalyzeCvUseCase {
     String apiKey, {
     String? jobDescription,
     String? coverLetterText,
+    String? targetIndustry,
+    String? targetRole,
   }) async {
     if (apiKey.isEmpty) {
       throw Exception('Please add your API key in Settings.');
@@ -25,6 +27,8 @@ class AnalyzeCvUseCase {
       apiKey,
       jobDescription: jobDescription,
       coverLetterText: coverLetterText,
+      targetIndustry: targetIndustry,
+      targetRole: targetRole,
     );
     await _repository.saveResult(result);
     return result;

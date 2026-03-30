@@ -47,7 +47,7 @@ class _ResultScreenState extends State<ResultScreen> with TickerProviderStateMix
     _tabViews = [
       OverviewTab(result: r),
       CorrectionsTab(result: r),
-      const ProposedChangesTab(),
+      ProposedChangesTab(result: r),
       if (r.hasJobMatch) JobMatchTab(result: r),
       if (r.hasCompanyResearch) CompanyResearchTab(result: r),
       KeywordsTab(result: r),

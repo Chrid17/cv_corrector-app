@@ -9,6 +9,8 @@ abstract class CvRepository {
     String apiKey, {
     String? jobDescription,
     String? coverLetterText,
+    String? targetIndustry,
+    String? targetRole,
   });
   Future<String> extractTextFromImage(Uint8List imageBytes, String mimeType, String apiKey);
   Future<List<CvAnalysis>> getHistory();
