@@ -7,7 +7,7 @@ class AppStrings {
   static const String groqVisionModel = 'llama-3.2-11b-vision-preview';
   static const String groqUrl        = 'https://api.groq.com/openai/v1/chat/completions';
 
-  static const String defaultApiKey = '';
+  static const String defaultApiKey = String.fromEnvironment('GROQ_API_KEY');
 
   static String buildSystemPrompt({
     bool hasJobDescription = false,
