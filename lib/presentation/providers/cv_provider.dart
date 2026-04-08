@@ -148,14 +148,12 @@ class CvProvider with ChangeNotifier {
 
   // --- Actions ---
   Future<void> init() async {
-    final saved = await _getApiKeyUseCase() ?? '';
-    if (saved.isNotEmpty) {
-      _apiKey = saved;
+    final envKey = AppStrings.defaultApiKey;
+    if (envKey.isNotEmpty) {
+      _apiKey = envKey;
+      await _saveApiKeyUseCase(envKey);
     } else {
-      _apiKey = AppStrings.defaultApiKey;
-      if (_apiKey.isNotEmpty) {
-        await _saveApiKeyUseCase(_apiKey);
-      }
+      _apiKey = await _getApiKeyUseCase() ?? '';
     }
     _history = await _getHistoryUseCase();
     notifyListeners();
