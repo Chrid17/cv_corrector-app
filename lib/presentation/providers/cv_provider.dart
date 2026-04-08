@@ -79,6 +79,8 @@ class CvProvider with ChangeNotifier {
   String get targetIndustry => _targetIndustry;
   String get targetRole => _targetRole;
   bool get hasTargetIndustry => _targetIndustry.isNotEmpty;
+  bool get hasAnalyzableContent => _cvText.isNotEmpty || _coverLetterText.isNotEmpty;
+  bool get isCoverLetterOnly => _cvText.isEmpty && _coverLetterText.isNotEmpty;
 
   // --- Setters ---
   void setCvText(String text, {String? fileName, Uint8List? pdfBytes}) {
@@ -179,7 +181,7 @@ class CvProvider with ChangeNotifier {
   }
 
   Future<void> analyzeCV() async {
-    if (_cvText.isEmpty) return;
+    if (!hasAnalyzableContent) return;
 
     if (_apiKey.isEmpty) {
       _errorMessage = 'No API Key found. Please go to Settings and enter your API Key.';
@@ -194,9 +196,13 @@ class CvProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      _loadingMessage = hasJobDescription
-          ? 'Matching CV against job description...'
-          : 'Running deep analysis...';
+      if (isCoverLetterOnly) {
+        _loadingMessage = 'Reviewing your cover letter...';
+      } else if (hasJobDescription) {
+        _loadingMessage = 'Matching CV against job description...';
+      } else {
+        _loadingMessage = 'Running deep analysis...';
+      }
       notifyListeners();
 
       _currentResult = await _analyzeCvUseCase(

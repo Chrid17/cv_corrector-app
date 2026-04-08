@@ -31,31 +31,43 @@ class _ResultScreenState extends State<ResultScreen> with TickerProviderStateMix
     super.initState();
     final r = widget.result;
 
-    _tabs = [
-      'Overview',
-      'Corrections',
-      'Proposals',
-      if (r.hasJobMatch) 'JD Match',
-      if (r.hasCompanyResearch) 'Company',
-      'Keywords',
-      'Skills',
-      'Cover Letter',
-      'Interview',
-      'Learning Path',
-    ];
-
-    _tabViews = [
-      OverviewTab(result: r),
-      CorrectionsTab(result: r),
-      ProposedChangesTab(result: r),
-      if (r.hasJobMatch) JobMatchTab(result: r),
-      if (r.hasCompanyResearch) CompanyResearchTab(result: r),
-      KeywordsTab(result: r),
-      SkillsTab(result: r),
-      CoverLetterTab(result: r),
-      InterviewTab(result: r),
-      LearningPathTab(result: r),
-    ];
+    if (r.isCoverLetterOnly) {
+      _tabs = [
+        'Cover Letter',
+        'Interview',
+        'Learning Path',
+      ];
+      _tabViews = [
+        CoverLetterTab(result: r),
+        InterviewTab(result: r),
+        LearningPathTab(result: r),
+      ];
+    } else {
+      _tabs = [
+        'Overview',
+        'Corrections',
+        'Proposals',
+        if (r.hasJobMatch) 'JD Match',
+        if (r.hasCompanyResearch) 'Company',
+        'Keywords',
+        'Skills',
+        'Cover Letter',
+        'Interview',
+        'Learning Path',
+      ];
+      _tabViews = [
+        OverviewTab(result: r),
+        CorrectionsTab(result: r),
+        ProposedChangesTab(result: r),
+        if (r.hasJobMatch) JobMatchTab(result: r),
+        if (r.hasCompanyResearch) CompanyResearchTab(result: r),
+        KeywordsTab(result: r),
+        SkillsTab(result: r),
+        CoverLetterTab(result: r),
+        InterviewTab(result: r),
+        LearningPathTab(result: r),
+      ];
+    }
 
     _tabController = TabController(length: _tabs.length, vsync: this);
   }
@@ -80,7 +92,19 @@ class _ResultScreenState extends State<ResultScreen> with TickerProviderStateMix
             Row(
               children: [
                 Text(r.jobTitle, style: AppTextStyles.bodySmall.copyWith(color: AppColors.primary)),
-                if (r.hasJobDescription) ...[
+                if (r.isCoverLetterOnly) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text('Cover Letter Review', style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.primary, fontSize: 9,
+                    )),
+                  ),
+                ] else if (r.hasJobDescription) ...[
                   const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),

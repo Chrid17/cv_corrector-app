@@ -70,28 +70,37 @@ class CvRemoteDataSource {
     String? targetIndustry,
     String? targetRole,
   }) async {
+    final hasCV = cvText.trim().isNotEmpty;
     final hasJD = jobDescription != null && jobDescription.isNotEmpty;
     final hasCL = coverLetterText != null && coverLetterText.isNotEmpty;
     final hasIndustry = targetIndustry != null && targetIndustry.isNotEmpty;
     final hasRole = targetRole != null && targetRole.isNotEmpty;
+    final coverLetterOnly = !hasCV && hasCL;
 
     final systemPrompt = AppStrings.buildSystemPrompt(
       hasJobDescription: hasJD,
       hasCoverLetter: hasCL,
+      coverLetterOnly: coverLetterOnly,
       targetIndustry: hasIndustry ? targetIndustry : null,
       targetRole: hasRole ? targetRole : null,
     );
 
     final userMessageBuffer = StringBuffer();
-    userMessageBuffer.writeln('Please analyze this CV thoroughly and return the JSON response:\n');
+    if (coverLetterOnly) {
+      userMessageBuffer.writeln('Please review this cover letter thoroughly and return the JSON response:\n');
+    } else {
+      userMessageBuffer.writeln('Please analyze this CV thoroughly and return the JSON response:\n');
+    }
     if (hasIndustry || hasRole) {
       userMessageBuffer.writeln('=== TARGET CONTEXT ===');
       if (hasIndustry) userMessageBuffer.writeln('Target Industry: $targetIndustry');
       if (hasRole) userMessageBuffer.writeln('Target Role: $targetRole');
       userMessageBuffer.writeln();
     }
-    userMessageBuffer.writeln('=== CV/RESUME ===');
-    userMessageBuffer.writeln(cvText);
+    if (hasCV) {
+      userMessageBuffer.writeln('=== CV/RESUME ===');
+      userMessageBuffer.writeln(cvText);
+    }
 
     if (hasJD) {
       userMessageBuffer.writeln('\n=== JOB DESCRIPTION ===');
@@ -103,39 +112,68 @@ class CvRemoteDataSource {
       userMessageBuffer.writeln(coverLetterText);
     }
 
-    final response = await http.post(
-      Uri.parse(AppStrings.groqUrl),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $apiKey',
-      },
-      body: jsonEncode({
-        'model': AppStrings.groqModel,
-        'messages': [
-          {
-            'role': 'system',
-            'content': systemPrompt,
-          },
-          {
-            'role': 'user',
-            'content': userMessageBuffer.toString(),
-          },
-        ],
-        'temperature': 0.4,
-        'max_tokens': 32768,
-        'response_format': {'type': 'json_object'},
-      }),
-    ).timeout(
-      const Duration(seconds: 180),
-      onTimeout: () => throw Exception('Request timed out. Please try again.'),
-    );
+    var userMessage = userMessageBuffer.toString();
+
+    final totalInputChars = systemPrompt.length + userMessage.length;
+    final estimatedInputTokens = (totalInputChars / 3.2).ceil();
+    const tpmBudget = 11800;
+    const maxOutputTokens = 8192;
+
+    if (estimatedInputTokens + maxOutputTokens > tpmBudget) {
+      final allowedInputTokens = tpmBudget - maxOutputTokens;
+      final allowedChars = (allowedInputTokens * 3.2).floor();
+      final systemChars = systemPrompt.length;
+      final maxUserChars = allowedChars - systemChars;
+      if (maxUserChars > 500 && userMessage.length > maxUserChars) {
+        userMessage = '${userMessage.substring(0, maxUserChars)}\n\n[Document truncated to fit analysis limits. Focus on the content provided above.]';
+      }
+    }
+
+    final maxTokens = maxOutputTokens;
+
+    final requestBody = jsonEncode({
+      'model': AppStrings.groqModel,
+      'messages': [
+        {'role': 'system', 'content': systemPrompt},
+        {'role': 'user', 'content': userMessage},
+      ],
+      'temperature': 0.4,
+      'max_tokens': maxTokens,
+      'response_format': {'type': 'json_object'},
+    });
+
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $apiKey',
+    };
+
+    late http.Response response;
+    const maxRetries = 3;
+    for (var attempt = 0; attempt < maxRetries; attempt++) {
+      response = await http.post(
+        Uri.parse(AppStrings.groqUrl),
+        headers: headers,
+        body: requestBody,
+      ).timeout(
+        const Duration(seconds: 180),
+        onTimeout: () => throw Exception('Request timed out. Please try again.'),
+      );
+
+      if (response.statusCode == 429 && attempt < maxRetries - 1) {
+        final retryAfter = int.tryParse(response.headers['retry-after'] ?? '') ?? 15;
+        final waitSeconds = retryAfter.clamp(5, 60);
+        await Future.delayed(Duration(seconds: waitSeconds));
+        continue;
+      }
+      break;
+    }
 
     if (response.statusCode != 200) {
       if (response.statusCode == 401) {
         throw Exception('Invalid API Key. Please check your key and update it in Settings.');
       }
-      if (response.statusCode == 403) {
-        throw Exception('Forbidden: Your API key might not have permission for this model or operation.');
+      if (response.statusCode == 429) {
+        throw Exception('Rate limit reached. Please wait a moment and try again.');
       }
       final body = jsonDecode(response.body);
       final message =

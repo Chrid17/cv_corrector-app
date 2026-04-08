@@ -18,8 +18,12 @@ class AnalyzeCvUseCase {
     if (apiKey.isEmpty) {
       throw Exception('Please add your API key in Settings.');
     }
-    if (cvText.trim().length < 50) {
-      throw Exception('CV text is too short. Please provide a complete CV.');
+
+    final hasCv = cvText.trim().isNotEmpty;
+    final hasCoverLetter = coverLetterText != null && coverLetterText.trim().isNotEmpty;
+
+    if (!hasCv && !hasCoverLetter) {
+      throw Exception('Please provide a CV or a cover letter to analyze.');
     }
 
     final result = await _repository.analyzeCv(

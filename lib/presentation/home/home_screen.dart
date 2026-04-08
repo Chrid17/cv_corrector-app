@@ -19,11 +19,21 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedTab = 0;
+  int _logoTapCount = 0;
 
   final _tabs = const [
     _AnalyzeTab(),
     HistoryScreen(),
   ];
+
+  void _onLogoTap() {
+    _logoTapCount++;
+    if (_logoTapCount >= 5) {
+      _logoTapCount = 0;
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
+    }
+    Future.delayed(const Duration(seconds: 2), () => _logoTapCount = 0);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,31 +41,23 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                gradient: AppColors.primaryGradient,
-                borderRadius: BorderRadius.circular(8),
+        title: GestureDetector(
+          onTap: _onLogoTap,
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text('CV', style: AppTextStyles.headingLarge.copyWith(color: AppColors.background, fontSize: 14)),
               ),
-              child: Text('CV', style: AppTextStyles.headingLarge.copyWith(color: AppColors.background, fontSize: 14)),
-            ),
-            const SizedBox(width: 6),
-            Text('Analyzer Pro', style: AppTextStyles.headingLarge.copyWith(color: AppColors.primary)),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined, color: AppColors.textSecondary),
-            tooltip: 'Settings',
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const SettingsScreen()),
-            ),
+              const SizedBox(width: 6),
+              Text('Analyzer Pro', style: AppTextStyles.headingLarge.copyWith(color: AppColors.primary)),
+            ],
           ),
-          const SizedBox(width: 4),
-        ],
+        ),
       ),
       body: _tabs[_selectedTab],
       bottomNavigationBar: Container(
@@ -183,18 +185,24 @@ class _AnalyzeTabState extends State<_AnalyzeTab> {
 
               // Analyze button
               GradientButton(
-                label: provider.hasJobDescription
-                    ? 'Analyze & Match CV'
-                    : 'Analyze My CV',
-                icon: Icons.search_rounded,
-                onTap: provider.cvText.isNotEmpty ? () => _analyze(context, provider) : null,
+                label: provider.isCoverLetterOnly
+                    ? 'Review My Cover Letter'
+                    : provider.hasJobDescription
+                        ? 'Analyze & Match CV'
+                        : provider.hasCoverLetter
+                            ? 'Analyze CV & Review Cover Letter'
+                            : 'Analyze My CV',
+                icon: provider.isCoverLetterOnly ? Icons.rate_review_rounded : Icons.search_rounded,
+                onTap: provider.hasAnalyzableContent ? () => _analyze(context, provider) : null,
                 width: double.infinity,
               ),
               const SizedBox(height: 8),
-              if (provider.hasJobDescription || provider.hasCoverLetter)
+              if (provider.hasJobDescription || provider.hasCoverLetter || provider.isCoverLetterOnly)
                 Center(
                   child: Text(
-                    '${provider.hasJobDescription ? "JD matching" : ""}${provider.hasJobDescription && provider.hasCoverLetter ? " + " : ""}${provider.hasCoverLetter ? "Cover letter review" : ""} enabled',
+                    provider.isCoverLetterOnly
+                        ? 'Cover letter review mode — no CV required'
+                        : '${provider.hasJobDescription ? "JD matching" : ""}${provider.hasJobDescription && provider.hasCoverLetter ? " + " : ""}${provider.hasCoverLetter ? "Cover letter review" : ""} enabled',
                     style: AppTextStyles.bodySmall.copyWith(color: AppColors.success),
                   ),
                 ),

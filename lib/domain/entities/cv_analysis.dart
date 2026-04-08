@@ -225,4 +225,6 @@ class CvAnalysis {
   bool get hasCoverLetterReview => coverLetterReview != null;
   bool get hasJobMatch => jobMatchAnalysis != null;
   bool get hasCompanyResearch => companyResearch != null;
+  bool get isCoverLetterOnly => rawCvText.trim().isEmpty && rawCoverLetterText != null && rawCoverLetterText!.isNotEmpty;
+  bool get hasCvContent => rawCvText.trim().isNotEmpty;
 }
