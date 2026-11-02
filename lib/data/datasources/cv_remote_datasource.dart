@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import '../../core/constants/app_strings.dart';
@@ -36,7 +37,9 @@ class CvRemoteDataSource {
           },
         ],
         'temperature': 0.1,
-        'max_tokens': 4096,
+        'max_completion_tokens': 4096,
+        // Plain text extraction: skip the model's thinking mode.
+        'reasoning_effort': 'none',
       }),
     ).timeout(
       const Duration(seconds: 60),
@@ -47,9 +50,7 @@ class CvRemoteDataSource {
       if (response.statusCode == 401) {
         throw Exception('Invalid API Key.');
       }
-      final body = jsonDecode(response.body);
-      final message = body['error']?['message'] ?? 'Unknown error (${response.statusCode})';
-      throw Exception('Vision API Error: $message');
+      throw Exception('Vision API Error: ${_apiErrorMessage(response)}');
     }
 
     final body = jsonDecode(response.body);
@@ -114,22 +115,38 @@ class CvRemoteDataSource {
 
     var userMessage = userMessageBuffer.toString();
 
-    final totalInputChars = systemPrompt.length + userMessage.length;
-    final estimatedInputTokens = (totalInputChars / 3.2).ceil();
-    const tpmBudget = 11800;
+    // Groq counts prompt tokens + max_completion_tokens against the
+    // per-minute token limit, so input and output share one budget.
+    // gpt-oss's tokenizer averages ~4 chars/token on English; 3.6
+    // deliberately over-estimates so requests stay under the limit.
+    const charsPerToken = 3.6;
+    const requestOverheadTokens = 150; // chat template + reasoning preamble
+    const minOutputTokens = 4500;
     const maxOutputTokens = 8192;
+    const tpmBudget = AppStrings.groqTpmBudget;
+    const truncationNote =
+        '\n\n[Document truncated to fit analysis limits. Focus on the content provided above.]';
 
-    if (estimatedInputTokens + maxOutputTokens > tpmBudget) {
-      final allowedInputTokens = tpmBudget - maxOutputTokens;
-      final allowedChars = (allowedInputTokens * 3.2).floor();
-      final systemChars = systemPrompt.length;
-      final maxUserChars = allowedChars - systemChars;
+    int estimateInputTokens() =>
+        ((systemPrompt.length + userMessage.length) / charsPerToken).ceil() +
+        requestOverheadTokens;
+
+    if (estimateInputTokens() + minOutputTokens > tpmBudget) {
+      final allowedInputTokens =
+          tpmBudget - minOutputTokens - requestOverheadTokens;
+      final maxUserChars = (allowedInputTokens * charsPerToken).floor() -
+          systemPrompt.length -
+          truncationNote.length;
       if (maxUserChars > 500 && userMessage.length > maxUserChars) {
-        userMessage = '${userMessage.substring(0, maxUserChars)}\n\n[Document truncated to fit analysis limits. Focus on the content provided above.]';
+        userMessage = '${userMessage.substring(0, maxUserChars)}$truncationNote';
       }
     }
 
-    final maxTokens = maxOutputTokens;
+    // Give the response everything the budget has left after the input.
+    final maxTokens = math.max(
+      minOutputTokens,
+      math.min(maxOutputTokens, tpmBudget - estimateInputTokens()),
+    );
 
     final requestBody = jsonEncode({
       'model': AppStrings.groqModel,
@@ -138,7 +155,11 @@ class CvRemoteDataSource {
         {'role': 'user', 'content': userMessage},
       ],
       'temperature': 0.4,
-      'max_tokens': maxTokens,
+      'max_completion_tokens': maxTokens,
+      // gpt-oss is a reasoning model; its thinking tokens come out of
+      // max_completion_tokens, so keep it short to leave room for the JSON.
+      'reasoning_effort': 'low',
+      'include_reasoning': false,
       'response_format': {'type': 'json_object'},
     });
 
@@ -175,10 +196,15 @@ class CvRemoteDataSource {
       if (response.statusCode == 429) {
         throw Exception('Rate limit reached. Please wait a moment and try again.');
       }
-      final body = jsonDecode(response.body);
-      final message =
-          body['error']?['message'] ?? 'Unknown error (${response.statusCode})';
-      throw Exception('API Error: $message');
+      if (response.statusCode == 413) {
+        throw Exception(
+            "This document is too long for your Groq plan's per-minute token limit. Shorten the CV or job description and try again.");
+      }
+      if (_apiErrorCode(response) == 'json_validate_failed') {
+        throw Exception(
+            'The analysis was cut off before it finished. Please try again, or shorten the CV or job description.');
+      }
+      throw Exception('API Error: ${_apiErrorMessage(response)}');
     }
 
     final body = jsonDecode(response.body);
@@ -187,6 +213,7 @@ class CvRemoteDataSource {
       throw Exception('No response received. Please try again.');
     }
 
+    final finishReason = choices[0]['finish_reason'] as String?;
     String rawText = choices[0]['message']?['content'] as String? ?? '';
 
     String jsonStr = rawText.trim();
@@ -202,11 +229,22 @@ class CvRemoteDataSource {
       parsed = jsonDecode(jsonStr);
     } catch (e) {
       final jsonMatch = RegExp(r'\{[\s\S]*\}').firstMatch(jsonStr);
+      Map<String, dynamic>? recovered;
       if (jsonMatch != null) {
-        parsed = jsonDecode(jsonMatch.group(0)!);
-      } else {
+        try {
+          recovered = jsonDecode(jsonMatch.group(0)!) as Map<String, dynamic>;
+        } catch (_) {
+          recovered = null;
+        }
+      }
+      if (recovered == null) {
+        if (finishReason == 'length') {
+          throw Exception(
+              'The analysis was cut off before it finished. Please try again, or shorten the CV or job description.');
+        }
         throw Exception('Failed to parse response. Please try again.');
       }
+      parsed = recovered;
     }
 
     final model = CvAnalysisModel.fromApiJson(
@@ -262,6 +300,23 @@ class CvRemoteDataSource {
 
     return model;
   }
+
+  Map<String, dynamic>? _apiError(http.Response response) {
+    try {
+      final body = jsonDecode(response.body);
+      final error = body is Map ? body['error'] : null;
+      return error is Map<String, dynamic> ? error : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String? _apiErrorCode(http.Response response) =>
+      _apiError(response)?['code'] as String?;
+
+  String _apiErrorMessage(http.Response response) =>
+      _apiError(response)?['message'] as String? ??
+      'Unknown error (${response.statusCode})';
 
   bool _isPlaceholderText(String text) {
     if (text.trim().isEmpty) return true;

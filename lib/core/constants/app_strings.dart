@@ -3,9 +3,18 @@ class AppStrings {
   static const String appTagline     = 'Your professional career command center';
   static const String apiKeyPref     = 'groq_api_key';
   static const String historyPref    = 'cv_history';
-  static const String groqModel      = 'llama-3.3-70b-versatile';
-  static const String groqVisionModel = 'llama-3.2-11b-vision-preview';
+  // Groq shut down llama-3.3-70b-versatile (16 Aug 2026) and
+  // llama-3.2-11b-vision-preview. See https://console.groq.com/docs/deprecations
+  static const String groqModel      = 'openai/gpt-oss-120b';
+  // Only openly available Groq model that reads images (Preview status).
+  static const String groqVisionModel = 'qwen/qwen3.8-27b';
   static const String groqUrl        = 'https://api.groq.com/openai/v1/chat/completions';
+
+  /// Groq checks prompt tokens + max_completion_tokens against the
+  /// tokens-per-minute (TPM) limit. gpt-oss-120b on the free plan allows
+  /// 8,000 TPM; this leaves a safety margin. If your Groq limits page
+  /// (console.groq.com/settings/limits) shows a higher TPM, raise this.
+  static const int groqTpmBudget     = 7800;
 
   static const String defaultApiKey = String.fromEnvironment('GROQ_API_KEY');
 

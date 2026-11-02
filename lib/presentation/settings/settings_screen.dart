@@ -136,7 +136,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   _infoRow('Version', '2.0.0'),
                   _infoRow('Platform', 'Cross-platform (Flutter)'),
-                  _infoRow('Engine', 'Groq — Llama 3.3 70B'),
+                  _infoRow('Engine', 'Groq — GPT-OSS 120B'),
                 ],
               ),
             ).animate().fadeIn(delay: 300.ms),
